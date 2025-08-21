@@ -1,13 +1,15 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Icon } from "@iconify/react";
 import dotsVertical from "@iconify-icons/mdi/dots-vertical";
 
 import image from "../assets/4c1a900b3b3e49a09cbd22efaee47a0cec00b79a.jpg";
 import Topbar from "../components/Topbar";
+import { useGetAllUsers } from "../store/useAuth";
 
 function Users() {
   const [active, setActive] = useState("Client");
   const [selectedUser, setSelectedUser] = useState(null);
+  const { data: usersData, isLoading, isError, error } = useGetAllUsers();
 
   const clientData = [
     {
@@ -30,6 +32,24 @@ function Users() {
     },
   ];
 
+  // Prefer server data when available; expect shape like { clients: [], mechanics: [] } or flat users with role
+  const { clients, mechanics } = useMemo(() => {
+    if (!usersData) return { clients: clientData, mechanics: mechanicData };
+    // Flexible handling of various shapes
+    if (Array.isArray(usersData)) {
+      const cli = usersData.filter((u) => (u.role || u.type) === 'client');
+      const mech = usersData.filter((u) => (u.role || u.type) === 'mechanic');
+      return {
+        clients: cli.length ? cli : clientData,
+        mechanics: mech.length ? mech : mechanicData,
+      };
+    }
+    return {
+      clients: usersData.clients?.length ? usersData.clients : clientData,
+      mechanics: usersData.mechanics?.length ? usersData.mechanics : mechanicData,
+    };
+  }, [usersData]);
+
   const openDetails = (user) => {
     setSelectedUser(user);
   };
@@ -42,6 +62,13 @@ function Users() {
     <div className="w-full h-full p-10 space-y-8">
       {/* Topbar */}
       <Topbar title="users" />
+
+      {isLoading && (
+        <div className="text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded p-2">Loading users...</div>
+      )}
+      {isError && (
+        <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded p-2">{error?.message || 'Failed to load users'}</div>
+      )}
 
       {/* Controls: Toggle + Search */}
       <div className="flex flex-col md:flex-row justify-between items-center gap-4">
@@ -111,7 +138,7 @@ function Users() {
 
           <tbody>
             {active === "Mechanic"
-              ? mechanicData.map((item, idx) => (
+              ? mechanics.map((item, idx) => (
                   <tr
                     key={idx}
                     className="bg-[#E1E1E1] text-sm text-center rounded-md"
@@ -151,7 +178,7 @@ function Users() {
                     </td>
                   </tr>
                 ))
-              : clientData.map((item, idx) => (
+              : clients.map((item, idx) => (
                   <tr
                     key={idx}
                     className="bg-[#E1E1E1] text-sm text-center rounded-md cursor-pointer"

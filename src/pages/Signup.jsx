@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import Input from '../components/Input';
 import Button from '../components/Button';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useSignupInitiate } from '../store/useAuth';
 
 function Signup() {
   const [form, setForm] = useState({
@@ -13,6 +14,8 @@ function Signup() {
     terms: false,
   });
   const [errors, setErrors] = useState({});
+  const signupMutation = useSignupInitiate();
+  const navigate = useNavigate();
 
   function handleChange(e) {
     const { name, value, type, checked } = e.target;
@@ -22,9 +25,35 @@ function Signup() {
     }));
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
-    console.log('Signup form submit:', form);
+    // Basic validation
+    const nextErrors = {};
+    if (!form.firstName) nextErrors.firstName = 'First name is required';
+    if (!form.lastName) nextErrors.lastName = 'Last name is required';
+    if (!form.email) nextErrors.email = 'Email is required';
+    if (!form.password) nextErrors.password = 'Password is required';
+    if (!form.country) nextErrors.country = 'Country is required';
+    if (!form.terms) nextErrors.terms = 'Please accept terms';
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length) return;
+
+    const payload = {
+      firstName: form.firstName,
+      lastName: form.lastName,
+      email: form.email,
+      country: form.country,
+      password: form.password,
+    };
+    try {
+      const data = await signupMutation.mutateAsync(payload);
+      console.log('Signup initiated:', data);
+      // Save email for OTP verification step and navigate
+      localStorage.setItem('signupEmail', form.email);
+      navigate('/verify-otp');
+    } catch (err) {
+      console.error('Signup error:', err?.message || err);
+    }
   }
 
   return (
@@ -103,8 +132,11 @@ function Signup() {
               Accept the <span className="underline">Terms</span> and <span className="underline">Privacy Policy</span>
             </label>
           </div>
-          <Button type="submit">
-            Sign Up
+          {signupMutation.isError && (
+            <p className="text-red-600 text-sm">{signupMutation.error?.message}</p>
+          )}
+          <Button type="submit" disabled={signupMutation.isPending}>
+            {signupMutation.isPending ? 'Creating account...' : 'Sign Up'}
           </Button>
           <div className="flex justify-center items-center gap-1 mt-4">
             <span className="font-poppins font-medium text-[13px] leading-5 text-black/70">

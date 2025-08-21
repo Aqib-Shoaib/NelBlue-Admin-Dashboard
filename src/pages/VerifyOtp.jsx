@@ -1,25 +1,40 @@
 import React, { useState } from 'react';
 import Button from '../components/Button';
 import Input from '../components/Input';
+import { useSignupVerify, useResendOtp } from '../store/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 function VerifyOtp() {
   const [otp, setOtp] = useState('');
-  const [email] = useState('victorokeke43@gmail.com'); // Replace with actual email if available
-  const [resendLoading, setResendLoading] = useState(false);
+  const [email] = useState(() => localStorage.getItem('signupEmail') || '');
+  const verifyMutation = useSignupVerify();
+  const resendMutation = useResendOtp();
+  const navigate = useNavigate();
 
   function handleOtpChange(e) {
     setOtp(e.target.value);
   }
 
-  function handleVerify(e) {
+  async function handleVerify(e) {
     e.preventDefault();
-    console.log('Verify OTP submit:', { email, otp });
+    try {
+      const data = await verifyMutation.mutateAsync({ email, otp });
+      console.log('OTP verified:', data);
+      // Clear saved email and navigate to login
+      localStorage.removeItem('signupEmail');
+      navigate('/login');
+    } catch (err) {
+      // React Query surfaces error via verifyMutation.error as well
+      console.error('Verify error:', err?.message || err);
+    }
   }
 
-  function handleResend() {
-    setResendLoading(true);
-    // Add resend OTP logic here
-    setTimeout(() => setResendLoading(false), 2000);
+  async function handleResend() {
+    try {
+      await resendMutation.mutateAsync({ email });
+    } catch (err) {
+      console.error('Resend error:', err?.message || err);
+    }
   }
 
   return (
@@ -58,16 +73,22 @@ function VerifyOtp() {
               type="button"
               style='secondary'
               onClick={handleResend}
-              disabled={resendLoading}
+              disabled={resendMutation.isPending}
             >
-              {resendLoading ? 'Sending...' : 'Send again'}
+              {resendMutation.isPending ? 'Sending...' : 'Send again'}
             </Button>
             <Button
               type="submit"
+              disabled={verifyMutation.isPending}
             >
-              Check email box
+              {verifyMutation.isPending ? 'Verifying...' : 'Check email box'}
             </Button>
           </div>
+          {(verifyMutation.isError || resendMutation.isError) && (
+            <p className="text-red-600 text-sm">
+              {verifyMutation.error?.message || resendMutation.error?.message}
+            </p>
+          )}
         </form>
       </div>
     </div>

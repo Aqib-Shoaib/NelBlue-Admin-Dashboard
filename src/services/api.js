@@ -20,6 +20,31 @@ function getToken() {
   );
 }
 
+function setToken(token) {
+  if (!token) return;
+  localStorage.setItem('accessToken', token);
+  API.defaults.headers.common.Authorization = `Bearer ${token}`;
+}
+
+function clearTokens() {
+  try {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('token');
+    localStorage.removeItem('jwt');
+  } catch (_) {}
+  delete API.defaults.headers.common.Authorization;
+}
+
+export async function logout() {
+  try {
+    await API.post('/auth/logout');
+  } catch (_) {
+    // ignore network/server errors during logout
+  } finally {
+    clearTokens();
+  }
+}
+
 // Request interceptor to attach JWT if present
 API.interceptors.request.use(
   (config) => {
@@ -33,11 +58,60 @@ API.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Optional: response interceptor (e.g., refresh token handling placeholder)
+// Response interceptor with refresh flow
+let isRefreshing = false;
+let pendingRequests = [];
+
 API.interceptors.response.use(
   (response) => response,
   async (error) => {
-    // You can add 401 handling / refresh flow here later
+    const originalRequest = error?.config;
+
+    const status = error?.response?.status;
+    const isAuthEndpoint = originalRequest?.url?.includes('/auth/login') || originalRequest?.url?.includes('/auth/refreshtoken');
+
+    if (status === 401 && !originalRequest?._retry && !isAuthEndpoint) {
+      originalRequest._retry = true;
+
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          pendingRequests.push({ resolve, reject });
+        })
+          .then((token) => {
+            originalRequest.headers = originalRequest.headers || {};
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return API.request(originalRequest);
+          })
+          .catch((err) => Promise.reject(err));
+      }
+
+      isRefreshing = true;
+      try {
+        const { data } = await API.post('/auth/refreshtoken');
+        const newToken = data?.accessToken || data?.token || data?.jwt || null;
+        if (!newToken) {
+          throw new Error('No token returned from refresh');
+        }
+        setToken(newToken);
+
+        // Resolve queued requests
+        pendingRequests.forEach(({ resolve }) => resolve(newToken));
+        pendingRequests = [];
+
+        // Retry original request with new token
+        originalRequest.headers = originalRequest.headers || {};
+        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+        return API.request(originalRequest);
+      } catch (refreshErr) {
+        pendingRequests.forEach(({ reject }) => reject(refreshErr));
+        pendingRequests = [];
+        await logout();
+        return Promise.reject(refreshErr);
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
     return Promise.reject(error);
   }
 );

@@ -1,19 +1,34 @@
 import React, { useState } from 'react'
 import Input from '../components/Input'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import Button from '../components/Button'
+import { useLogin } from '../store/useAuth'
 
 function Login() {
     const [form, setForm] = useState({ email: '', password: '', remember: false })
+    const loginMutation = useLogin()
+    const navigate = useNavigate()
 
     function handleChange(e) {
         const { name, value, type, checked } = e.target
         setForm(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }))
     }
 
-    function handleSubmit(e) {
+    async function handleSubmit(e) {
         e.preventDefault()
-        console.log('Login form submit:', form)
+        const payload = { email: form.email, password: form.password }
+        try {
+            const data = await loginMutation.mutateAsync(payload)
+            // Persist token if available under common keys
+            const token = data?.accessToken || data?.token || data?.jwt || null
+            if (token) {
+                localStorage.setItem('accessToken', token)
+            }
+            console.log('Login success:', data)
+            navigate('/')
+        } catch (err) {
+            console.error('Login error:', err?.message || err)
+        }
     }
     return (
         <div className='grid grid-cols-1 md:grid-cols-2 gap-4 min-h-[calc(100dvh-0px)] w-full p-4 md:p-6'>
@@ -50,7 +65,10 @@ function Login() {
                                 <Link className='text-sm text-[#023AA2]' to='/login' >Forgot Password</Link>
                             </div>
                         </div>
-                        <Button type='submit'>Login</Button>
+                        {loginMutation.isError && (
+                            <p className='text-red-600 text-sm'>{loginMutation.error?.message}</p>
+                        )}
+                        <Button type='submit' disabled={loginMutation.isPending}> {loginMutation.isPending ? 'Signing in...' : 'Login'} </Button>
                         <div className="flex justify-center items-center gap-1 mt-4">
                             <span className="font-poppins font-medium text-[13px] leading-5 text-black/70">
                                 Don’t have an account?

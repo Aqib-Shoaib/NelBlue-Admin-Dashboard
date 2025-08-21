@@ -12,8 +12,10 @@ import {
 } from "recharts";
 import image from "../assets/4c1a900b3b3e49a09cbd22efaee47a0cec00b79a.jpg";
 import Topbar from "../components/Topbar";
+import { useAdminDashboard } from "../store/useDashboard";
 function Dashboard() {
-  const data = [
+  const { data: dashboard, isLoading, isError, error } = useAdminDashboard();
+  const data = (dashboard && dashboard.chartData) || [
     { day: "Sun", tasks: 500 },
     { day: "Mon", tasks: 1000 },
     { day: "Tue", tasks: 1500 },
@@ -22,10 +24,17 @@ function Dashboard() {
     { day: "Fri", tasks: 1400 },
     { day: "Sat", tasks: 1600 },
   ];
+  console.log(dashboard)
 
   return (
     <div className="w-full h-full p-4 sm:p-6 md:p-10">
       <Topbar title="Dashboard" subTitle="See the world from here" />
+      {isLoading && (
+        <div className="mb-3 text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded p-2">Loading dashboard...</div>
+      )}
+      {isError && (
+        <div className="mb-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded p-2">{error?.message || 'Failed to load dashboard'}</div>
+      )}
       <div className="rounded-lg flex flex-col md:flex-row gap-3 my-4">
         <div className="flex-1 h-[100px] rounded-lg flex items-center justify-between px-6 py-7 border border-[#121212]/50">
           <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#014F8E]">
@@ -40,7 +49,7 @@ function Dashboard() {
           {/* Right side content */}
           <div className="flex flex-col justify-start">
             <span className="text-2xl font-semibold">
-              $15,000
+              {dashboard?.revenue ?? '$15,000'}
             </span>
             <span className=" text-gray-500">Revenue</span>
           </div>
@@ -58,7 +67,7 @@ function Dashboard() {
           {/* Right side content */}
           <div className="flex flex-col justify-start">
             <span className="text-2xl font-semibold">
-              278
+              {dashboard?.ongoing ?? 278}
             </span>
             <span className=" text-gray-500">Ongoing</span>
           </div>
@@ -76,7 +85,7 @@ function Dashboard() {
           {/* Right side content */}
           <div className="flex flex-col justify-start">
             <span className="text-2xl font-semibold">
-              150
+              {dashboard?.completed ?? 150}
             </span>
             <span className="text-gray-500">Completed</span>
           </div>
@@ -94,7 +103,7 @@ function Dashboard() {
           {/* Right side content */}
           <div className="flex flex-col justify-start">
             <span className="text-2xl font-semibold">
-              24
+              {dashboard?.cancelled ?? 24}
             </span>
             <span className="text-gray-500">Cancelled</span>
           </div>
