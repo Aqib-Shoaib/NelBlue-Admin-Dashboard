@@ -24,7 +24,8 @@ function Dashboard() {
     { day: "Fri", tasks: 1400 },
     { day: "Sat", tasks: 1600 },
   ];
-  console.log(dashboard)
+
+  console.log(dashboard, isLoading, isError, error);
 
   return (
     <div className="w-full h-full p-4 sm:p-6 md:p-10">
@@ -67,7 +68,7 @@ function Dashboard() {
           {/* Right side content */}
           <div className="flex flex-col justify-start">
             <span className="text-2xl font-semibold">
-              {dashboard?.ongoing ?? 278}
+              {dashboard?.ongoingPayments ?? 278}
             </span>
             <span className=" text-gray-500">Ongoing</span>
           </div>
@@ -85,7 +86,7 @@ function Dashboard() {
           {/* Right side content */}
           <div className="flex flex-col justify-start">
             <span className="text-2xl font-semibold">
-              {dashboard?.completed ?? 150}
+              {dashboard?.completedPayments ?? 150}
             </span>
             <span className="text-gray-500">Completed</span>
           </div>
@@ -103,7 +104,7 @@ function Dashboard() {
           {/* Right side content */}
           <div className="flex flex-col justify-start">
             <span className="text-2xl font-semibold">
-              {dashboard?.cancelled ?? 24}
+              {dashboard?.canceledPayments ?? 24}
             </span>
             <span className="text-gray-500">Cancelled</span>
           </div>

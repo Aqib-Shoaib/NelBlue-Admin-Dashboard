@@ -19,13 +19,11 @@ function Login() {
         const payload = { email: form.email, password: form.password }
         try {
             const data = await loginMutation.mutateAsync(payload)
-            // Persist token if available under common keys
-            const token = data?.accessToken || data?.token || data?.jwt || null
-            if (token) {
-                localStorage.setItem('accessToken', token)
+            console.log("navigating::", !!data)
+            if(data){
+                
+                navigate('/')
             }
-            console.log('Login success:', data)
-            navigate('/')
         } catch (err) {
             console.error('Login error:', err?.message || err)
         }

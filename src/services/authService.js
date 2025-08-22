@@ -5,6 +5,9 @@ import API from './api';
 export const login = async (data) => {
   try {
     const res = await API.post('/auth/login', data);
+    console.log(res.data)
+    const { accessToken, refreshToken } = res.data;
+    API.setTokens({ accessToken, refreshToken });
     return { success: true, data: res.data };
   } catch (error) {
     const message = extractErrorMessage(error);
@@ -55,6 +58,7 @@ export const getAllUsers = async () => {
 export const getProfile = async () => {
   try {
     const res = await API.get('/auth/profile');
+    console.log('Profile response:', res);
     return { success: true, data: res.data };
   } catch (error) {
     const message = extractErrorMessage(error);

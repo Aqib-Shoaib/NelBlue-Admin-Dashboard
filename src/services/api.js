@@ -10,47 +10,39 @@ const API = axios.create({
   withCredentials: true,
 });
 
-// Helper to read token (update keys as needed)
-function getToken() {
-  return (
-    localStorage.getItem('accessToken') ||
-    localStorage.getItem('token') ||
-    localStorage.getItem('jwt') ||
-    null
-  );
+// Token management
+function getToken(type = 'access') {
+  return localStorage.getItem(`${type}Token`) || null;
 }
 
-function setToken(token) {
-  if (!token) return;
-  localStorage.setItem('accessToken', token);
-  API.defaults.headers.common.Authorization = `Bearer ${token}`;
+function setTokens(tokens) {
+  if (!tokens) return;
+
+  if (tokens.accessToken) {
+    localStorage.setItem('accessToken', tokens.accessToken);
+    API.defaults.headers.common.Authorization = `Bearer ${tokens.accessToken}`;
+  }
+
+  if (tokens.refreshToken) {
+    localStorage.setItem('refreshToken', tokens.refreshToken);
+  }
 }
 
 function clearTokens() {
   try {
     localStorage.removeItem('accessToken');
-    localStorage.removeItem('token');
-    localStorage.removeItem('jwt');
-  } catch (_) {}
-  delete API.defaults.headers.common.Authorization;
-}
-
-export async function logout() {
-  try {
-    await API.post('/auth/logout');
-  } catch (_) {
-    // ignore network/server errors during logout
-  } finally {
-    clearTokens();
+    localStorage.removeItem('refreshToken');
+    delete API.defaults.headers.common.Authorization;
+  } catch (err) {
+    console.log(err);
   }
 }
 
-// Request interceptor to attach JWT if present
+// Add request interceptor to automatically add token
 API.interceptors.request.use(
   (config) => {
     const token = getToken();
     if (token) {
-      config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
@@ -58,62 +50,42 @@ API.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor with refresh flow
-let isRefreshing = false;
-let pendingRequests = [];
-
+// Add response interceptor to handle token expiry and refresh
 API.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const originalRequest = error?.config;
+    const originalRequest = error.config;
 
-    const status = error?.response?.status;
-    const isAuthEndpoint = originalRequest?.url?.includes('/auth/login') || originalRequest?.url?.includes('/auth/refreshtoken');
-
-    if (status === 401 && !originalRequest?._retry && !isAuthEndpoint) {
+    if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          pendingRequests.push({ resolve, reject });
-        })
-          .then((token) => {
-            originalRequest.headers = originalRequest.headers || {};
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-            return API.request(originalRequest);
-          })
-          .catch((err) => Promise.reject(err));
-      }
-
-      isRefreshing = true;
       try {
-        const { data } = await API.post('/auth/refreshtoken');
-        const newToken = data?.accessToken || data?.token || data?.jwt || null;
-        if (!newToken) {
-          throw new Error('No token returned from refresh');
+        const refreshToken = getToken('refresh');
+        if (!refreshToken) {
+          throw new Error('No refresh token available');
         }
-        setToken(newToken);
 
-        // Resolve queued requests
-        pendingRequests.forEach(({ resolve }) => resolve(newToken));
-        pendingRequests = [];
+        const response = await API.post('/auth/refresh', { refreshToken });
+        const { accessToken, refreshToken: newRefreshToken } = response.data;
 
-        // Retry original request with new token
-        originalRequest.headers = originalRequest.headers || {};
-        originalRequest.headers.Authorization = `Bearer ${newToken}`;
-        return API.request(originalRequest);
-      } catch (refreshErr) {
-        pendingRequests.forEach(({ reject }) => reject(refreshErr));
-        pendingRequests = [];
-        await logout();
-        return Promise.reject(refreshErr);
-      } finally {
-        isRefreshing = false;
+        setTokens({ accessToken, refreshToken: newRefreshToken });
+
+        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+        return API(originalRequest);
+      } catch (refreshError) {
+        clearTokens();
+        window.location.href = '/login';
+        return Promise.reject(refreshError);
       }
     }
 
     return Promise.reject(error);
   }
 );
+
+// Export the API instance and token functions
+API.getToken = getToken;
+API.setTokens = setTokens;
+API.clearTokens = clearTokens;
 
 export default API;

@@ -4,9 +4,10 @@ import API from './api';
 
 export const getAdminDashboard = async () => {
   try {
-    const res = await API.get('/adminDashboard');
+    const res = await API.get('/admin/adminDashboard');
     return { success: true, data: res.data };
   } catch (error) {
+    // console.log(error)
     const message = extractErrorMessage(error);
     return { success: false, message };
   }

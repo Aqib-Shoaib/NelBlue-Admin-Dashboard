@@ -1,54 +1,17 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { Icon } from "@iconify/react";
 import dotsVertical from "@iconify-icons/mdi/dots-vertical";
 
 import image from "../assets/4c1a900b3b3e49a09cbd22efaee47a0cec00b79a.jpg";
 import Topbar from "../components/Topbar";
 import { useGetAllUsers } from "../store/useAuth";
+import FullPageSpinner from "../components/FullPageSpinner";
 
 function Users() {
   const [active, setActive] = useState("Client");
   const [selectedUser, setSelectedUser] = useState(null);
   const { data: usersData, isLoading, isError, error } = useGetAllUsers();
 
-  const clientData = [
-    {
-      name: "Jonas Blong",
-      address: "35 home avenue, ontario",
-      phone: "0906607126",
-      category: "Car",
-      vehicleType: "Tesla",
-      model: "Truck20144",
-    },
-  ];
-
-  const mechanicData = [
-    {
-      name: "Jonas Blong",
-      contact: "0906607126",
-      address: "35 home avenue, ontario",
-      specialization: ["Buses", "Hunda"],
-      status: "Approved",
-    },
-  ];
-
-  // Prefer server data when available; expect shape like { clients: [], mechanics: [] } or flat users with role
-  const { clients, mechanics } = useMemo(() => {
-    if (!usersData) return { clients: clientData, mechanics: mechanicData };
-    // Flexible handling of various shapes
-    if (Array.isArray(usersData)) {
-      const cli = usersData.filter((u) => (u.role || u.type) === 'client');
-      const mech = usersData.filter((u) => (u.role || u.type) === 'mechanic');
-      return {
-        clients: cli.length ? cli : clientData,
-        mechanics: mech.length ? mech : mechanicData,
-      };
-    }
-    return {
-      clients: usersData.clients?.length ? usersData.clients : clientData,
-      mechanics: usersData.mechanics?.length ? usersData.mechanics : mechanicData,
-    };
-  }, [usersData]);
 
   const openDetails = (user) => {
     setSelectedUser(user);
@@ -58,14 +21,36 @@ function Users() {
     setSelectedUser(null);
   };
 
+  if (isLoading) return <FullPageSpinner />
+  const clients = usersData.filter((u) => u.role.toLowerCase() === 'client')
+  const mechanics = usersData.filter((u) => u.role.toLowerCase() === 'mechanic')
+
+  console.log(clients, mechanics, isLoading);
+
+  const ProfessionalStats = [
+    {
+      title: "Total Professionals",
+      value: mechanics.length,
+    },
+    {
+      title: "New Professionals",
+      value: mechanics.filter((m) => m.isVerified).length,
+    },
+    {
+      title: "Approved Professionals",
+      value: mechanics.filter((m) => m.isVerified).length,
+    },
+    {
+      title: "Pending Professionals",
+      value: mechanics.filter((m) => !m.isVerified).length,
+    },
+  ]
+
   return (
     <div className="w-full h-full p-10 space-y-8">
       {/* Topbar */}
       <Topbar title="users" />
 
-      {isLoading && (
-        <div className="text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded p-2">Loading users...</div>
-      )}
       {isError && (
         <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded p-2">{error?.message || 'Failed to load users'}</div>
       )}
@@ -73,23 +58,21 @@ function Users() {
       {/* Controls: Toggle + Search */}
       <div className="flex flex-col md:flex-row justify-between items-center gap-4">
         {/* Toggle buttons */}
-        <div className="flex rounded-lg border overflow-hidden">
+        <div className="flex gap-2">
           <button
-            className={`px-6 py-2 ${
-              active === "Mechanic"
-                ? "bg-[#014F8E] text-white"
-                : "bg-white text-[#121212]"
-            }`}
+            className={`px-6 py-2 rounded-lg text-lg font-medium ${active === "Mechanic"
+              ? "bg-[#014F8E] text-white"
+              : "bg-white text-[#121212]"
+              }`}
             onClick={() => setActive("Mechanic")}
           >
-            Mechanic
+            Professional
           </button>
           <button
-            className={`px-6 py-2 ${
-              active === "Client"
-                ? "bg-[#014F8E] text-white"
-                : "bg-white text-[#121212]"
-            }`}
+            className={`px-6 py-2 rounded-lg text-lg font-medium ${active === "Client"
+              ? "bg-[#014F8E] text-white"
+              : "bg-white text-[#121212]"
+              }`}
             onClick={() => setActive("Client")}
           >
             Client
@@ -97,11 +80,11 @@ function Users() {
         </div>
 
         {/* Search input */}
-        <div className="w-full md:w-[300px] flex items-center border border-[#121212]/40 rounded-lg px-3 py-2">
+        {active === "Client" && <div className="w-full md:w-[300px] flex items-center border rounded-full border-[#121212]/40 px-3 py-2">
           <input
             type="text"
-            placeholder="Search Professional"
-            className="w-full outline-none text-sm"
+            placeholder="Search Client"
+            className="w-full outline-none text-sm font-medium"
           />
           <Icon
             icon="mdi:magnify"
@@ -109,105 +92,106 @@ function Users() {
             height="20"
             className="text-[#121212BF]"
           />
-        </div>
+        </div>}
       </div>
 
+      {active === "Mechanic" && (
+        <div className="flex items-center gap-2">
+          {ProfessionalStats.map((stat, idx) => (
+            <div className="flex-1 h-[108px] bg-[#EDEDED] rounded-lg" key={idx} >
+              <div className="flex flex-col items-start justify-center gap-2 p-4">
+                <p className="text-[16px] font-semibold">{stat.title}</p>
+                <p className="text-[16px] font-semibold">{stat.value}</p>
+              </div>
+            </div>
+          ))}
+        </div>)}
+
       {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-separate border-spacing-y-2">
-          <thead className="bg-[#F5F5F5] h-[64px] text-sm font-semibold">
+      <div className="overflow-x-auto rounded-md border h-full">
+        <table className="w-full text-left rounded-md spacing-y-4">
+          <thead className="bg-[#F5F5F5] h-[64px] text-sm font-semibold mb-2">
             <tr>
-              <th className="text-center font-semibold text-[14px]">Client</th>
               {active === "Mechanic" ? (
                 <>
-                  <th className="text-center">Contact</th>
-                  <th className="text-center">Specialization</th>
-                  <th className="text-center">Status</th>
-                  <th className="text-center">Action</th>
+                  <th className="text-center">S/N</th>
+                  <th className="text-center">Name</th>
+                  <th className="text-center">Email</th>
+                  <th className="text-center">Location</th>
+                  <th className="text-center">Verification</th>
+                  <th className="text-center">Payment</th>
                 </>
               ) : (
                 <>
-                  <th className="text-center">Contact</th>
-                  <th className="text-center">Categories</th>
-                  <th className="text-center">Vehicle Type</th>
-                  <th className="text-center">Model</th>
+                  <th className="text-center">S/N</th>
+                  <th className="text-center">Name</th>
+                  <th className="text-center">Email</th>
+                  <th className="text-center">Location</th>
+                  <th className="text-center">Verification</th>
+                  <th className="text-center">Rate</th>
                 </>
               )}
             </tr>
           </thead>
 
-          <tbody>
+          <tbody className="space-x-2 space-y-4">
             {active === "Mechanic"
               ? mechanics.map((item, idx) => (
-                  <tr
-                    key={idx}
-                    className="bg-[#E1E1E1] text-sm text-center rounded-md"
-                  >
-                    <td className="px-4 py-2">
-                      <div className="flex items-center justify-center gap-2">
-                        <img
-                          src={image}
-                          alt={item.name}
-                          className="w-8 h-8 rounded-full border"
-                        />
-                        <p className="text-[16px]">{item.name}</p>
-                      </div>
-                    </td>
-                    <td className="px-4 py-2">
-                      <p className="text-sm">{item.address}</p>
-                      <p className="text-xs text-gray-500">{item.contact}</p>
-                    </td>
-                    <td className="px-4 py-2">
-                      {item.specialization.map((spec, index) => (
-                        <span
-                          key={index}
-                          className="bg-gray-200 px-2 py-1 rounded text-xs mr-1"
-                        >
-                          {spec}
-                        </span>
-                      ))}
-                    </td>
-                    <td className="px-4 py-2 text-[#319F43] font-medium">
-                      {item.status}
-                    </td>
-                    <td
-                      className="px-4 py-2 cursor-pointer"
-                      onClick={() => openDetails(item)}
-                    >
-                      <Icon icon={dotsVertical} width="20" height="20" />
-                    </td>
-                  </tr>
-                ))
+                <tr
+                  key={idx}
+                  className="bg-[#E1E1E1]/70 hover:bg-[#E1E1E1] text-sm text-center rounded-md cursor-pointer h-fit"
+                  onClick={() => openDetails(item)}
+                >
+                  <td className="px-4 py-2 text-center">
+                    {item?.number ?? idx + 1}
+                  </td>
+                  <td className="px-4 py-2 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <p className="text-base">{`${item.firstName} ${item.lastName}`}</p>
+                    </div>
+                  </td>
+                  <td className="px-4 py-2 text-center">
+                    {item?.email}
+                  </td>
+                  <td className="px-4 py-2 text-center">
+                    {item?.address ?? 'Not Specified'}
+                  </td>
+                  <td className={`px-4 py-2 font-medium text-center ${item.isVerified ? 'text-[#319F43]' : 'text-[#FF0000]'}`}>
+                    {item.isVerified ? 'Approved' : 'Pending'}
+                  </td>
+                  <td className="px-4 py-2 text-center">
+                    {item?.payment ?? 'Not Specified'}
+                  </td>
+                </tr>
+              ))
               : clients.map((item, idx) => (
-                  <tr
-                    key={idx}
-                    className="bg-[#E1E1E1] text-sm text-center rounded-md cursor-pointer"
-                    onClick={() => openDetails(item)}
-                  >
-                    <td className="px-4 py-2">
-                      <div className="flex items-center justify-center gap-2">
-                        <img
-                          src={image}
-                          alt={item.name}
-                          className="w-8 h-8 rounded-full border"
-                        />
-                        <div className="text-left">
-                          <p className="text-[16px]">{item.name}</p>
-                          <p className="text-xs text-gray-500">
-                            {item.vehicleType}: {item.model}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-2">
-                      <p className="text-sm">{item.address}</p>
-                      <p className="text-xs text-gray-500">{item.phone}</p>
-                    </td>
-                    <td className="px-4 py-2">{item.category}</td>
-                    <td className="px-4 py-2">{item.vehicleType}</td>
-                    <td className="px-4 py-2">{item.model}</td>
-                  </tr>
-                ))}
+                <tr
+                  key={idx}
+                  className="bg-[#E1E1E1]/70 hover:bg-[#E1E1E1] text-sm text-center rounded-md cursor-pointer h-fit"
+                  onClick={() => openDetails(item)}
+                >
+                  <td className="px-4 py-2 text-center">
+                    {item?.number ?? idx + 1}
+                  </td>
+                  <td className="px-4 py-2 text-center">
+                    <div className="text-left">
+                      <p className="text-base">{`${item.firstName} ${item.lastName}`}</p>
+                    </div>
+                  </td>
+                  <td className="px-4 py-2 text-center">
+                    <p className="text-base">{item.email}</p>
+                  </td>
+                  <td className="px-4 py-2 text-center">
+                    {item?.address ?? 'Not Specified'}
+                  </td>
+                  <td className={`px-4 py-2 font-medium ${item.isVerified ? 'text-[#319F43]' : 'text-[#FF0000]'}`}>
+                    {item.isVerified ? 'Approved' : 'Pending'}
+                  </td>
+                  <td className="px-4 py-2 text-center">
+                    {item?.payment ?? 'Not Specified'}
+                  </td>
+                </tr>
+              ))}
           </tbody>
         </table>
       </div>

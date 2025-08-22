@@ -3,6 +3,16 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as authService from '../services/authService';
 import { normalize } from './helpers';
 
+export function useProfile() {
+  return useQuery({
+    queryKey: ['profile'],
+    queryFn: async () => {
+      const token = localStorage.getItem('accessToken');
+      if (!token) return null;
+      return normalize(await authService.getProfile());
+    },
+  });
+}
 
 
 export function useLogin() {
@@ -10,13 +20,7 @@ export function useLogin() {
   return useMutation({
     mutationFn: async (payload) => normalize(await authService.login(payload)),
     onSuccess: (data) => {
-      try {
-        const token = data?.accessToken || data?.token || data?.jwt || null;
-        if (token) {
-          localStorage.setItem('accessToken', token);
-        }
-      } catch (_) {}
-      // Invalidate profile to refetch with fresh auth
+      console.log(data)
       queryClient.invalidateQueries({ queryKey: ['profile'] });
     },
   });
@@ -28,7 +32,9 @@ export function useSignupInitiate() {
     onSuccess: (_data, variables) => {
       // persist email for OTP step
       if (variables?.email) {
-        try { localStorage.setItem('signupEmail', variables.email); } catch (_) {}
+        try { localStorage.setItem('signupEmail', variables.email); } catch (err) {
+          console.log(err);
+        }
       }
     },
   });
@@ -39,7 +45,9 @@ export function useSignupVerify() {
     mutationFn: async (payload) => normalize(await authService.signupVerify(payload)),
     onSuccess: () => {
       // clear email after successful verification
-      try { localStorage.removeItem('signupEmail'); } catch (_) {}
+      try { localStorage.removeItem('signupEmail'); } catch (err) {
+        console.log(err);
+      }
     },
   });
 }
