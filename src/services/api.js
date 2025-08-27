@@ -56,29 +56,43 @@ API.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    // Only attempt token refresh for 401 errors and if we haven't already retried
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
       try {
         const refreshToken = getToken('refresh');
         if (!refreshToken) {
-          throw new Error('No refresh token available');
+          console.log('No refresh token available, redirecting to login');
+          clearTokens();
+          window.location.href = '/login';
+          return Promise.reject(error);
         }
 
+        console.log('Attempting token refresh...');
         const response = await API.post('/auth/refresh', { refreshToken });
         const { accessToken, refreshToken: newRefreshToken } = response.data;
 
-        setTokens({ accessToken, refreshToken: newRefreshToken });
-
-        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-        return API(originalRequest);
+        if (accessToken) {
+          console.log('Token refresh successful');
+          setTokens({ accessToken, refreshToken: newRefreshToken });
+          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+          return API(originalRequest);
+        } else {
+          throw new Error('No access token in refresh response');
+        }
       } catch (refreshError) {
+        console.log('Token refresh failed:', refreshError);
         clearTokens();
-        window.location.href = '/login';
+        // Only redirect if we're not already on the login page
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
         return Promise.reject(refreshError);
       }
     }
 
+    // For other errors, just pass them through
     return Promise.reject(error);
   }
 );

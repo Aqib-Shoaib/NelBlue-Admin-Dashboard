@@ -18,12 +18,8 @@ function Login() {
         e.preventDefault()
         const payload = { email: form.email, password: form.password }
         try {
-            const data = await loginMutation.mutateAsync(payload)
-            console.log("navigating::", !!data)
-            if(data){
-                
-                navigate('/')
-            }
+            await loginMutation.mutateAsync(payload)
+            navigate('/')
         } catch (err) {
             console.error('Login error:', err?.message || err)
         }

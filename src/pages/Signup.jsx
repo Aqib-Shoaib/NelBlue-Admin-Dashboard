@@ -50,7 +50,7 @@ function Signup() {
       console.log('Signup initiated:', data);
       // Save email for OTP verification step and navigate
       localStorage.setItem('signupEmail', form.email);
-      navigate('/verify-otp');
+      navigate('/otp');
     } catch (err) {
       console.error('Signup error:', err?.message || err);
     }

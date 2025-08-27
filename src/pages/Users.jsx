@@ -1,19 +1,20 @@
 import React, { useState } from "react";
 import { Icon } from "@iconify/react";
-import dotsVertical from "@iconify-icons/mdi/dots-vertical";
-
-import image from "../assets/4c1a900b3b3e49a09cbd22efaee47a0cec00b79a.jpg";
 import Topbar from "../components/Topbar";
 import { useGetAllUsers } from "../store/useAuth";
 import FullPageSpinner from "../components/FullPageSpinner";
+import Drawer from "../components/Drawer";
+import UserDetails from "../components/UserDetails";
 
 function Users() {
-  const [active, setActive] = useState("Client");
+  const [active, setActive] = useState("client");
   const [selectedUser, setSelectedUser] = useState(null);
   const { data: usersData, isLoading, isError, error } = useGetAllUsers();
 
 
   const openDetails = (user) => {
+    console.log('Users - Opening details for user:', user);
+    console.log('Users - User ID:', user?.id);
     setSelectedUser(user);
   };
 
@@ -23,26 +24,24 @@ function Users() {
 
   if (isLoading) return <FullPageSpinner />
   const clients = usersData.filter((u) => u.role.toLowerCase() === 'client')
-  const mechanics = usersData.filter((u) => u.role.toLowerCase() === 'mechanic')
-
-  console.log(clients, mechanics, isLoading);
+  const professional = usersData.filter((u) => u.role.toLowerCase() === 'professional')
 
   const ProfessionalStats = [
     {
       title: "Total Professionals",
-      value: mechanics.length,
+      value: professional.length,
     },
     {
       title: "New Professionals",
-      value: mechanics.filter((m) => m.isVerified).length,
+      value: professional.filter((m) => m.isVerified).length,
     },
     {
       title: "Approved Professionals",
-      value: mechanics.filter((m) => m.isVerified).length,
+      value: professional.filter((m) => m.isVerified).length,
     },
     {
       title: "Pending Professionals",
-      value: mechanics.filter((m) => !m.isVerified).length,
+      value: professional.filter((m) => !m.isVerified).length,
     },
   ]
 
@@ -60,27 +59,27 @@ function Users() {
         {/* Toggle buttons */}
         <div className="flex gap-2">
           <button
-            className={`px-6 py-2 rounded-lg text-lg font-medium ${active === "Mechanic"
+            className={`px-6 py-2 rounded-lg text-lg font-medium ${active === "professional"
               ? "bg-[#014F8E] text-white"
               : "bg-white text-[#121212]"
               }`}
-            onClick={() => setActive("Mechanic")}
+            onClick={() => setActive("professional")}
           >
             Professional
           </button>
           <button
-            className={`px-6 py-2 rounded-lg text-lg font-medium ${active === "Client"
+            className={`px-6 py-2 rounded-lg text-lg font-medium ${active === "client"
               ? "bg-[#014F8E] text-white"
               : "bg-white text-[#121212]"
               }`}
-            onClick={() => setActive("Client")}
+            onClick={() => setActive("client")}
           >
             Client
           </button>
         </div>
 
         {/* Search input */}
-        {active === "Client" && <div className="w-full md:w-[300px] flex items-center border rounded-full border-[#121212]/40 px-3 py-2">
+        {active === "client" && <div className="w-full md:w-[300px] flex items-center border rounded-full border-[#121212]/40 px-3 py-2">
           <input
             type="text"
             placeholder="Search Client"
@@ -95,7 +94,7 @@ function Users() {
         </div>}
       </div>
 
-      {active === "Mechanic" && (
+      {active === "profesional" && (
         <div className="flex items-center gap-2">
           {ProfessionalStats.map((stat, idx) => (
             <div className="flex-1 h-[108px] bg-[#EDEDED] rounded-lg" key={idx} >
@@ -112,7 +111,7 @@ function Users() {
         <table className="w-full text-left rounded-md spacing-y-4">
           <thead className="bg-[#F5F5F5] h-[64px] text-sm font-semibold mb-2">
             <tr>
-              {active === "Mechanic" ? (
+              {active === "professional" ? (
                 <>
                   <th className="text-center">S/N</th>
                   <th className="text-center">Name</th>
@@ -135,8 +134,8 @@ function Users() {
           </thead>
 
           <tbody className="space-x-2 space-y-4">
-            {active === "Mechanic"
-              ? mechanics.map((item, idx) => (
+            {active === "professional"
+              ? professional.map((item, idx) => (
                 <tr
                   key={idx}
                   className="bg-[#E1E1E1]/70 hover:bg-[#E1E1E1] text-sm text-center rounded-md cursor-pointer h-fit"
@@ -196,107 +195,15 @@ function Users() {
         </table>
       </div>
 
-      {/* View Details Modal */}
-      {selectedUser && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-[500px] space-y-4">
-            {/* Header */}
-            <div className="flex justify-between items-center">
-              <h3 className="text-xl font-semibold">Project Details</h3>
-              <button
-                onClick={closeDetails}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* User Info */}
-            <div className="w-full h-[85px] bg-[#F5F5F5] p-4 rounded-lg flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <img
-                  src={image}
-                  alt={selectedUser.name}
-                  className="w-[50px] h-[50px] rounded-full border"
-                />
-                <div>
-                  <p className="font-semibold">{selectedUser.name}</p>
-                  <p className="text-xs">Client</p>
-                </div>
-              </div>
-              <div>
-                <p className="text-sm font-semibold">Tesla</p>
-                <p className="text-sm text-gray-600">Truck20144</p>
-              </div>
-            </div>
-
-            {/* Details */}
-            <div className="bg-[#F5F5F5] rounded-lg p-5 space-y-4">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  <img
-                    src={image}
-                    alt={selectedUser.name}
-                    className="w-[50px] h-[50px] rounded-full border"
-                  />
-                  <div>
-                    <p className="font-semibold">{selectedUser.name}</p>
-                    <p className="text-xs">Mechanic</p>
-                  </div>
-                </div>
-                <div className="flex gap-2 px-3 py-1 bg-[#C4D9FF]/55 rounded">
-                  <p className="text-sm">Buses</p>
-                  <p className="text-sm">Honda</p>
-                </div>
-              </div>
-
-              <hr />
-
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <p className="text-sm text-gray-500">Date</p>
-                  <p>25/05/2025</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Payment Plan</p>
-                  <p>Milestone</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Service Fee</p>
-                  <p>$400</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Time</p>
-                  <p>3PM</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Payment Method</p>
-                  <p>Card</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Status</p>
-                  <p className="font-medium text-green-600">Completed</p>
-                </div>
-              </div>
-
-              <hr />
-
-              {/* Services */}
-              <div>
-                <p className="text-sm font-semibold mb-2">Services</p>
-                <ul className="space-y-2">
-                  <li className="flex items-center px-2 border-l-2 border-[#023AA2]">
-                    Brake Pad Servicing
-                  </li>
-                  <li className="flex items-center px-2 border-l-2 border-[#023AA2]">
-                    Gear oil maintenance
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* User Details Drawer */}
+      <Drawer
+        isOpen={!!selectedUser}
+        onClose={closeDetails}
+        width="full"
+        position="right"
+      >
+        <UserDetails user={selectedUser} onClose={closeDetails} onUpdate={() => refetch()} />
+      </Drawer>
     </div>
   );
 }

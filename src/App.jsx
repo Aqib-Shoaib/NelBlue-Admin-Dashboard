@@ -12,6 +12,7 @@ import NotFound from "./pages/NotFound";
 import AuthLayout from "./Layout/AuthLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
+import UserDetails from "./components/UserDetails";
 
 function App() {
   return (
