@@ -91,26 +91,25 @@ function VerifyOtp() {
   const hasErrors = Object.values(errors).some(Boolean);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white p-4">
-      <div className="relative w-full max-w-[820px] bg-[#F4F4F4] rounded-2xl flex flex-col items-center shadow-md">
+    <div className="h-dvh w-full overflow-y-hidden flex items-center justify-center bg-white">
+      <div className="relative w-full max-w-[820px] bg-[#F4F4F4] rounded-2xl flex flex-col items-center shadow-md p-10">
         <div className="w-full flex">
           <div className="p-6 sm:p-8">
             <span className="font-inter font-bold text-[20px] sm:text-[24px] leading-[29px] text-[#023AA2]">NELAUTOS</span>
           </div>
         </div>
-        {/* Envelope illustration placeholder */}
-        <div className="mt-6">
+        <div className="">
           <div className="w-14 h-14 bg-gray-200 rounded-2xl flex items-center justify-center">
             <span className="text-4xl sm:text-5xl text-gray-400">📧</span>
           </div>
         </div>
-        <form onSubmit={handleVerify} className="w-full max-w-[720px] mx-auto flex flex-col items-center gap-6 p-6 sm:p-8" noValidate>
+        <form onSubmit={handleVerify} className="w-full mx-auto flex flex-col items-center gap-6 p-6 sm:p-8" noValidate>
           <h2 className="font-poppins font-bold text-2xl sm:text-[30px] leading-[30px] text-black text-center">Verify your email to continue</h2>
-          <p className="font-poppins font-normal text-base sm:text-[20px] leading-[25px] text-center text-black/60 max-w-[675px]">
+          <p className="font-poppins font-normal text-base sm:text-[20px] leading-[25px] text-center text-black/60">
             We just sent a 6-digit OTP code to the address: <span className="font-semibold text-black/80">{email}</span>.<br />
             Please enter the code below to verify your address.
           </p>
-          <div className="w-full max-w-[420px]">
+          <div className="w-full max-w-[400px]">
             <Input
               label="Enter OTP"
               name="otp"
@@ -128,7 +127,7 @@ function VerifyOtp() {
               }}
             />
           </div>
-          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 mt-2 w-full max-w-[720px]">
+          <div className="flex flex-col sm:flex-row sm:gap-2.5 mt-2 w-full max-w-[400px]">
             <Button
               type="button"
               style='secondary'

@@ -166,14 +166,14 @@ function Signup() {
   const hasErrors = Object.values(errors).some(Boolean);
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-3">
       <div className="relative w-full max-w-[820px] h-full py-4 bg-[#F4F4F4] rounded-2xl flex flex-col items-center shadow-md">
         <div className="absolute left-6 sm:left-8 top-8 sm:top-12">
           <span className="font-inter font-bold text-[24px] leading-[29px] text-[#023AA2]">NELAUTOS</span>
         </div>
-        <form onSubmit={handleSubmit} className="w-full max-w-[600px] mx-auto flex flex-col gap-6 pt-[110px] sm:pt-[125px] px-4 sm:px-6" noValidate>
-          <h2 className="font-poppins font-medium text-2xl sm:text-[28px] leading-[28px] text-[#121212] text-center mb-2">Sign up as Admin</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="w-full max-w-[600px] mx-auto flex flex-col gap-3 pt-[110px] sm:pt-[90px] px-4 sm:px-6" noValidate>
+          <h2 className="font-medium text-[28px] sm:text-[28px] leading-[28px] text-[#121212] text-center mb-2">Sign up as Admin</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <Input
               label="First Name"
               name="firstName"
@@ -232,7 +232,7 @@ function Signup() {
             error={touched.password && errors.password}
             inputStyle="h-14"
           />
-          <div className="flex items-start gap-2 mt-2">
+          <div className="flex items-center gap-2 h-6 my-4">
             <input
               type="checkbox"
               name="terms"
@@ -241,8 +241,8 @@ function Signup() {
               className="w-[15px] h-[16px] border border-[#121212] rounded mr-2 cursor-pointer mt-1"
               id="terms"
             />
-            <label htmlFor="terms" className="font-poppins font-normal text-[13px] leading-5 text-black/50 cursor-pointer">
-              Accept the <span className="underline">Terms</span> and <span className="underline">Privacy Policy</span>
+            <label htmlFor="terms" className="font-normal text-[13px] leading-5 text-black/50 cursor-pointer">
+              Accept the <span className="text-[#023AA2] font-semibold">Terms</span> and <span className="text-[#023AA2] font-semibold">Privacy Policy</span>
             </label>
           </div>
           {errors.terms && (
@@ -257,13 +257,13 @@ function Signup() {
           >
             {signupMutation.isPending ? 'Creating account...' : 'Sign Up'}
           </Button>
-          <div className="flex justify-center items-center gap-1 mt-4">
-            <span className="font-poppins font-medium text-[13px] leading-5 text-black/70">
+          <div className="flex justify-center items-center gap-1 mt-2">
+            <span className="font-medium text-[13px] leading-5 text-[#121212]/66">
               Already have an account?
             </span>
             <Link
               to="/login"
-              className="font-poppins font-medium text-[13px] leading-5 text-[#023AA2] hover:underline"
+              className="font-medium text-[13px] leading-5 text-[#023AA2] hover:underline"
             >
               Login
             </Link>

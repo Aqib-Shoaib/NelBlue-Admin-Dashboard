@@ -27,7 +27,7 @@ const Input = ({
             {label && (
                 <label
                     htmlFor={name}
-                    className={`font-bold capitalize text-xl text-[#121212] mb-1 ${labelStyle}`}
+                    className={`font-bold capitalize text-xl text-[#121212]/66 mb-1 ${labelStyle}`}
                 >
                     {label}
                 </label>

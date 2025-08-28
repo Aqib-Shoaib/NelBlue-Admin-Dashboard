@@ -203,7 +203,7 @@ function Dashboard() {
           </div>
         </div>
       </div>
-      <div className="min-h-[250px] border rounded-md overflow-visible mt-4 p-2 sm:p-4">
+      <div className="min-h-[250px] border rounded-md overflow-x-hidden mt-4 p-2 sm:p-4">
         {/* Title */}
         <h2 className="text-lg font-semibold">Project</h2>
         {/* Table */}
@@ -227,7 +227,7 @@ function Dashboard() {
 
           {/* Table Body */}
           <tbody>
-            <tr className="text-sm text-center bg-[#E1E1E1]/25 rounded-md">
+            <tr className="bg-[#E1E1E1]/70 hover:bg-[#E1E1E1] text-sm text-center rounded-md">
               <td className="px-4 py-2">
                 <div className="flex items-center justify-center gap-2">
                   <img

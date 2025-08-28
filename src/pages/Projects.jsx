@@ -147,7 +147,7 @@ function Projects() {
               <tbody>
                 {filteredProjects.length > 0 ? (
                   filteredProjects.map((project, idx) => (
-                    <tr key={project._id} className="text-sm text-center bg-[#E1E1E1] rounded-md">
+                    <tr key={project._id} className="bg-[#E1E1E1]/70 hover:bg-[#E1E1E1] text-sm text-center rounded-md">
                       <td className="px-4 py-2">
                         <div
                           className="flex items-center justify-center gap-2 cursor-pointer"
@@ -228,7 +228,7 @@ function Projects() {
       {/* Client Details Modal */}
       {selectedProject && showClientDetails && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-[500px]">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-[95vw] sm:w-[500px]">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-semibold">Client Details</h3>
               <button
@@ -292,7 +292,7 @@ function Projects() {
       {/* Project Details Modal */}
       {selectedProject && !showClientDetails && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-[500px]">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-[95vw] sm:w-[500px]">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-semibold">Project Details</h3>
               <button
@@ -346,7 +346,7 @@ function Projects() {
                   <p className="text-sm text-black">${selectedProject.serviceId?.price}</p>
                 </div>
               </div>
-              <hr className="w-[401px] mx-auto bg-[#000000]/50" />
+              <hr className="w-full max-w-[401px] mx-auto bg-[#000000]/50" />
 
               {/* Project Details */}
               <div className="grid grid-cols-2 gap-4 mb-6 px-5 py-6">
@@ -369,7 +369,7 @@ function Projects() {
                   <p className="text-[14px]">{selectedProject.userId?.role}</p>
                 </div>
               </div>
-              <hr className="w-[401px] mx-auto bg-[#000000]/50" />
+              <hr className="w-full max-w-[401px] mx-auto bg-[#000000]/50" />
 
               {/* Service Description Section */}
               <div className="px-5 py-6 bg-[#F5F5F5]">

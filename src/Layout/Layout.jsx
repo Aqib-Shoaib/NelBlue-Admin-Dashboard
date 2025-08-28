@@ -6,7 +6,7 @@ function Layout() {
   const [open, setOpen] = useState(false)
 
   return (
-    <div className='grid md:grid-cols-[260px_1fr] grid-cols-1 w-screen h-dvh overflow-hidden'>
+    <div className='grid md:grid-cols-[260px_1fr] grid-cols-1 w-full min-h-dvh overflow-x-hidden'>
       {/* Desktop sidebar */}
       <div className='hidden md:block h-full'>
         <Sidebar />
@@ -65,3 +65,4 @@ function Layout() {
 }
 
 export default Layout
+

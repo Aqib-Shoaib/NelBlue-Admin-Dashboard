@@ -99,11 +99,12 @@ function Login() {
     const hasErrors = Object.values(errors).some(Boolean)
 
     return (
-        <div className='grid grid-cols-1 md:grid-cols-2 gap-4 min-h-[calc(100dvh-0px)] w-full p-4 md:p-6'>
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-4 h-screen w-full p-4 md:p-6'>
             <div className='bg-[#347CC6] w-full rounded-lg min-h-[180px] md:min-h-full'></div>
+            <div className='py-6' >
             <div className='bg-[#F4F4F4] w-full rounded-2xl p-4 sm:p-6' >
                 <div className='flex flex-col gap-3 py-8 sm:py-10 px-4 sm:px-8 md:px-12' >
-                    <h3 className='font-bold text-2xl text-[#023AA2]'>NELAUTOS</h3>
+                    <h3 className='font-bold text-2xl text-[#023AA2] font-inter'>NELAUTOS</h3>
                     <div className='mt-6'>
                         <h1 className='font-semibold text-2xl sm:text-3xl text-[#121212] mb-1'>Login</h1>
                         <p className='font-light text-sm text-[#12121250]'>Welcome,  fill up the form to get started.</p>
@@ -130,11 +131,11 @@ function Login() {
                         />
                         <div className='flex justify-between items-center'>
                             <div className='flex items-center gap-1.5'>
-                                <input type="checkbox" className='border border-[#121212] cursor-pointer' name="remember" id="remember" checked={form.remember} onChange={handleChange} />
-                                <p className='font-light text-sm text-[#12121250]'>Remember Me</p>
+                                <input type="checkbox" className='border border-[#121212] w-3.5 h-3.5 cursor-pointer' name="remember" id="remember" checked={form.remember} onChange={handleChange} />
+                                <p className='font-normal text-sm text-[#121212]/50'>Remember Me</p>
                             </div>
                             <div>
-                                <Link className='text-sm text-[#023AA2]' to='/login' >Forgot Password</Link>
+                                <Link className='text-sm text-[#023AA2]' to='/login' >Forgotten Password</Link>
                             </div>
                         </div>
                         {loginMutation.isError && (
@@ -156,6 +157,7 @@ function Login() {
                         </div>
                     </form>
                 </div>
+            </div>
             </div>
         </div>
     )
