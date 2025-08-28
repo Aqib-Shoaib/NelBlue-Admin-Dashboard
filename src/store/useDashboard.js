@@ -10,3 +10,17 @@ export function useAdminDashboard() {
   });
    
 }
+
+export function useAnalytics() {
+  return useQuery({
+    queryKey: ['analytics'],
+    queryFn: async () => normalize(await dashboardService.getAnalytics()),
+  });
+}
+
+export function useAllProjects() {
+  return useQuery({
+    queryKey: ['allProjects'],
+    queryFn: async () => normalize(await dashboardService.getAllProjects()),
+  });
+}

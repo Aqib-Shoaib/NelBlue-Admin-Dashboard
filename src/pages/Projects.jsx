@@ -1,83 +1,39 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Icon } from "@iconify/react";
-import mailO from "@iconify-icons/mdi/email-outline";
-import userIcon from "@iconify-icons/mdi/account";
-import rightArrow from "@iconify-icons/icon-park-outline/right";
-import notificationIcon from "@iconify-icons/tdesign/notification";
 import dotsVertical from "@iconify-icons/mdi/dots-vertical";
 import starIcon from "@iconify-icons/mdi/star";
 import starOutlineIcon from "@iconify-icons/mdi/star-outline";
 import image from "../assets/4c1a900b3b3e49a09cbd22efaee47a0cec00b79a.jpg";
 import Topbar from "../components/Topbar";
+import { useAllProjects } from "../store/useDashboard";
+import Spinner from "../components/Spinner";
 
 function Projects() {
   const [selectedProject, setSelectedProject] = useState(null);
   const [dropdownIndex, setDropdownIndex] = useState(null);
   const [showClientDetails, setShowClientDetails] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const dropdownRef = useRef();
 
-  const data = [
-    {
-      client: "Jonas Blong",
-      clientDetails: {
-        name: "Jonas Blong",
-        category: "Car",
-        vehicleType: "Tesla",
-        model: "Truck345674",
-        address: "35 home avenue, canada",
-        phone: "+234 7890543",
-        email: "JonasBlong@gmail.com",
-      },
-      task: "Brake Pad Servicing",
-      date: "25/03/2025",
-      time: "3PM",
-      amount: "$500",
-      status: "Completed",
-      image: image,
-      handyman: {
-        name: "Jones Stones",
-        rating: 4,
-        image: image,
-        specialization: ["Buses", "Honda"],
-        availabilityDays: "Monday - Friday",
-        availabilityHours: "08:00AM - 06:00PM",
-        phone: "+1 738 4896 5432",
-        address: "James street Canada",
-        email: "Jonestens@gmail.com",
-        services: ["Brake Pad Servicing", "Gear oil maintenance"],
-      },
-    },
-    {
-      client: "Tesla: Truck20144",
-      clientDetails: {
-        name: "Tesla Company",
-        category: "Cars",
-        vehicleType: "Tesla Semi",
-        model: "Truck20144",
-        address: "1 Tesla Road, Austin, TX",
-        phone: "+1 555 789 1234",
-        email: "fleet@tesla.com",
-      },
-      task: "Gear oil maintenance",
-      date: "26/03/2025",
-      time: "11AM",
-      amount: "$300",
-      status: "Pending",
-      image: image,
-      handyman: {
-        name: "Jane Smith",
-        rating: 3,
-        image: image,
-        specialization: ["Oil Change", "Electrical"],
-        availabilityDays: "Monday - Friday",
-        availabilityHours: "09:00AM - 05:00PM",
-        phone: "+1 555 123 4567",
-        address: "Main street, NY",
-        email: "janesmith@example.com",
-        services: ["Oil Change", "Electrical Repair"],
-      },
-    },
-  ];
+  // Fetch projects data from API
+  const { data: projectsData, isLoading, error } = useAllProjects();
+
+  console.log(projectsData)
+
+  // Extract data from API response
+  const { projects = [], payments = [], feedbacks = [], stats = {} } = projectsData || {};
+
+  // Filter projects based on search term
+  const filteredProjects = projects.filter(project => {
+    if (!searchTerm) return true;
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      project.userId?.firstName?.toLowerCase().includes(searchLower) ||
+      project.userId?.lastName?.toLowerCase().includes(searchLower) ||
+      project.userId?.email?.toLowerCase().includes(searchLower) ||
+      project.serviceId?.title?.toLowerCase().includes(searchLower)
+    );
+  });
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -132,109 +88,146 @@ function Projects() {
     return stars;
   };
 
+
+
   return (
     <div className="w-full h-full p-10 space-y-6">
       <Topbar title="Projects" />
 
-      {/* Search input */}
-      <div className="flex justify-end">
-        <div className="flex items-center border border-[#121212BF]/75 rounded-lg px-3 w-[300px]">
-          <input
-            type="text"
-            placeholder="Search Projects"
-            className="w-full outline-none text-sm"
-          />
-          <Icon icon="mdi:magnify" width="24" height="24" className="text-[#121212BF]" />
+      {/* Loading state - inline, doesn't cover sidebar */}
+      {isLoading && (
+        <div className="w-full h-full flex items-center justify-center">
+          <div className="text-center">
+            <Spinner />
+            <div className="mt-4 text-gray-600">Loading projects...</div>
+          </div>
         </div>
-      </div>
+      )}
 
-       {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-separate border-spacing-y-3">
-          <thead className="bg-[#F5F5F5] h-[64px] text-sm font-semibold">
-            <tr>
-              <th className="text-center">Client</th>
-              <th className="text-center">Task</th>
-              <th className="text-center">Date</th>
-              <th className="text-center">Time</th>
-              <th className="text-center">Amount</th>
-              <th className="text-center">Status</th>
-              <th className="text-center">Action</th>
-            </tr>
-          </thead>
+      {/* Error state */}
+      {error && (
+        <div className="w-full h-full flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-red-500 text-xl mb-2">Error loading projects</div>
+            <div className="text-gray-500">Please try again later</div>
+          </div>
+        </div>
+      )}
 
-          <tbody>
-            {data.map((item, idx) => (
-              <tr key={idx} className="text-sm text-center bg-[#E1E1E1] rounded-md">
-                <td className="px-4 py-2">
-                  <div
-                    className="flex items-center justify-center gap-2 cursor-pointer"
-                    onClick={() => openClientDetails(item)}
-                  >
-                    <img
-                      src={image}
-                      alt={item.client}
-                      className="w-8 h-8 rounded-full border"
-                    />
-                    <div className="flex flex-col text-left">
-                      <p className="text-[16px]">{item.client.split(":")[0]}</p>
-                      {item.client.includes(":") && (
-                        <p className="text-xs text-gray-500">{item.client.split(":")[1]}</p>
-                      )}
-                    </div>
-                  </div>
-                </td>
-                <td className="px-4 py-2">
-                  <p className="border-l border-[#023AA2] pl-2">{item.task}</p>
-                </td>
-                <td className="px-4 py-2">{item.date}</td>
-                <td className="px-4 py-2">{item.time}</td>
-                <td className="px-4 py-2">{item.amount}</td>
-                <td
-                  className={`px-4 py-2 font-medium ${
-                    item.status === "Completed" ? "text-green-600" : "text-yellow-600"
-                  }`}
-                >
-                  {item.status}
-                </td>
-                <td className="px-4 py-2 relative">
-                  <Icon
-                    icon={dotsVertical}
-                    width="24"
-                    height="24"
-                    className="cursor-pointer"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleDropdown(idx);
-                    }}
-                  />
-                  {dropdownIndex === idx && (
-                    <div
-                      ref={dropdownRef}
-                      className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10"
-                    >
-                      <button
-                        className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openProjectDetails(item);
-                        }}
-                      >
-                        View Project Details
-                      </button>
-                    </div>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {/* Content - only show when not loading */}
+      {!isLoading && (
+        <>
+          {/* Search input */}
+          <div className="flex justify-end">
+            <div className="flex items-center border border-[#121212BF]/75 rounded-lg px-3 w-[300px]">
+              <input
+                type="text"
+                placeholder="Search Projects"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full outline-none text-sm"
+              />
+              <Icon icon="mdi:magnify" width="24" height="24" className="text-[#121212BF]" />
+            </div>
+          </div>
 
+          {/* Table */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-separate border-spacing-y-3">
+              <thead className="bg-[#F5F5F5] h-[64px] text-sm font-semibold">
+                <tr>
+                  <th className="text-center">Client</th>
+                  <th className="text-center">Service</th>
+                  <th className="text-center">Price</th>
+                  <th className="text-center">Client Role</th>
+                  <th className="text-center">Action</th>
+                </tr>
+              </thead>
 
-      {/* Client Details Modal - Only shown when clicking client name */}
+              <tbody>
+                {filteredProjects.length > 0 ? (
+                  filteredProjects.map((project, idx) => (
+                    <tr key={project._id} className="text-sm text-center bg-[#E1E1E1] rounded-md">
+                      <td className="px-4 py-2">
+                        <div
+                          className="flex items-center justify-center gap-2 cursor-pointer"
+                          onClick={() => openClientDetails(project)}
+                        >
+                          <img
+                            src={project.userId?.profileImage || image}
+                            alt={`${project.userId?.firstName} ${project.userId?.lastName}`}
+                            className="w-8 h-8 rounded-full border"
+                            onError={(e) => {
+                              e.target.src = image;
+                            }}
+                          />
+                          <div className="flex flex-col text-left">
+                            <p className="text-[16px]">
+                              {project.userId?.firstName} {project.userId?.lastName}
+                            </p>
+                            <p className="text-xs text-gray-500">{project.userId?.email}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-2">
+                        <p className="border-l border-[#023AA2] pl-2">{project.serviceId?.title}</p>
+                      </td>
+                      <td className="px-4 py-2">${project.serviceId?.price || 0}</td>
+                      <td className="px-4 py-2">
+                        <span className={`px-2 py-1 rounded-full text-xs ${
+                          project.userId?.role === 'Client' 
+                            ? 'bg-blue-100 text-blue-800' 
+                            : 'bg-green-100 text-green-800'
+                        }`}>
+                          {project.userId?.role || 'N/A'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2 relative">
+                        <Icon
+                          icon={dotsVertical}
+                          width="24"
+                          height="24"
+                          className="cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleDropdown(idx);
+                          }}
+                        />
+                        {dropdownIndex === idx && (
+                          <div
+                            ref={dropdownRef}
+                            className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10"
+                          >
+                            <button
+                              className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openProjectDetails(project);
+                              }}
+                            >
+                              View Project Details
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="5" className="text-center py-8 text-gray-500">
+                      {searchTerm ? 'No projects found matching your search' : 'No projects available'}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+
+      {/* Client Details Modal */}
       {selectedProject && showClientDetails && (
-        <div className="fixed inset-0  bg-opacity-40 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-[500px]">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-semibold">Client Details</h3>
@@ -249,15 +242,18 @@ function Projects() {
             {/* Client Header Section */}
             <div className="flex items-center gap-4 mb-6">
               <img
-                src={image}
-                alt={selectedProject.clientDetails.name}
+                src={selectedProject.userId?.profileImage || image}
+                alt={`${selectedProject.userId?.firstName} ${selectedProject.userId?.lastName}`}
                 className="w-16 h-16 rounded-full border-2 border-gray-200"
+                onError={(e) => {
+                  e.target.src = image;
+                }}
               />
               <div>
                 <h4 className="text-lg font-semibold">
-                  {selectedProject.clientDetails.name}
+                  {selectedProject.userId?.firstName} {selectedProject.userId?.lastName}
                 </h4>
-                <p className="text-sm text-gray-500">Client</p>
+                <p className="text-sm text-gray-500">{selectedProject.userId?.role}</p>
               </div>
             </div>
 
@@ -265,67 +261,37 @@ function Projects() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm font-medium text-gray-500 mb-1">
-                    Categories
-                  </p>
-                  <p className="text-sm">
-                    {selectedProject.clientDetails.category}
-                  </p>
+                  <p className="text-sm font-medium text-gray-500 mb-1">Email</p>
+                  <p className="text-sm text-blue-600">{selectedProject.userId?.email}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-500 mb-1">
-                    Vehicle Type
-                  </p>
-                  <p className="text-sm">
-                    {selectedProject.clientDetails.vehicleType}
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm font-medium text-gray-500 mb-1">
-                    Model
-                  </p>
-                  <p className="text-sm">
-                    {selectedProject.clientDetails.model}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500 mb-1">
-                    Phone Number
-                  </p>
-                  <p className="text-sm">
-                    {selectedProject.clientDetails.phone}
-                  </p>
+                  <p className="text-sm font-medium text-gray-500 mb-1">Role</p>
+                  <p className="text-sm">{selectedProject.userId?.role}</p>
                 </div>
               </div>
 
               <div>
-                <p className="text-sm font-medium text-gray-500 mb-1">
-                  Address
-                </p>
-                <p className="text-sm">
-                  {selectedProject.clientDetails.address}
-                </p>
+                <p className="text-sm font-medium text-gray-500 mb-1">Service</p>
+                <p className="text-sm font-semibold">{selectedProject.serviceId?.title}</p>
               </div>
 
               <div>
-                <p className="text-sm font-medium text-gray-500 mb-1">Email</p>
-                <p className="text-sm text-blue-600">
-                  {selectedProject.clientDetails.email}
-                </p>
+                <p className="text-sm font-medium text-gray-500 mb-1">Service Description</p>
+                <p className="text-sm">{selectedProject.serviceId?.description}</p>
+              </div>
+
+              <div>
+                <p className="text-sm font-medium text-gray-500 mb-1">Price</p>
+                <p className="text-sm font-semibold text-green-600">${selectedProject.serviceId?.price}</p>
               </div>
             </div>
-
-           
           </div>
         </div>
       )}
 
-      {/* Project Details Modal - Only shown when clicking "View Details" in dropdown */}
+      {/* Project Details Modal */}
       {selectedProject && !showClientDetails && (
-        <div className="fixed inset-0 bg-opacity-40 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-[500px]">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-semibold">Project Details</h3>
@@ -342,115 +308,77 @@ function Projects() {
               <div className="flex justify-between items-center gap-4">
                 <div className="flex justify-center gap-2 items-center">
                   <img
-                    src={selectedProject.image}
-                    alt={selectedProject.client}
+                    src={selectedProject.userId?.profileImage || image}
+                    alt={`${selectedProject.userId?.firstName} ${selectedProject.userId?.lastName}`}
                     className="w-[50px] h-[50px] rounded-full border"
+                    onError={(e) => {
+                      e.target.src = image;
+                    }}
                   />
                   <div className="flex flex-col">
                     <p className="font-semibold">
-                      {selectedProject.client.split(":")[0]}
+                      {selectedProject.userId?.firstName} {selectedProject.userId?.lastName}
                     </p>
-                    <p className="font-normal text-[12px]">Client</p>
+                    <p className="font-normal text-[12px]">{selectedProject.userId?.role}</p>
                   </div>
                 </div>
                 <div>
-                  <p className="text-sm text-black font-semibold">
-                    {selectedProject.client.includes(":")
-                      ? selectedProject.client.split(":")[0].includes("Tesla")
-                        ? "Tesla"
-                        : ""
-                      : ""}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    {selectedProject.client.includes(":")
-                      ? selectedProject.client.split(":")[1]
-                      : ""}
-                  </p>
+                  <p className="text-sm text-black font-semibold">Project ID</p>
+                  <p className="text-sm text-gray-600">{selectedProject._id?.slice(-8)}</p>
                 </div>
               </div>
             </div>
 
             {/* Details Grid */}
             <div className="flex flex-col gap-2 bg-[#F5F5F5] rounded-[10px]">
-              {/* Mechanic Info */}
+              {/* Service Info */}
               <div className="w-full flex justify-between items-center gap-4 px-5 py-6">
                 <div className="flex justify-center gap-2 items-center">
-                  <img
-                    src={selectedProject.handyman.image}
-                    alt={selectedProject.handyman.name}
-                    className="w-[50px] h-[50px] rounded-full border"
-                  />
+                  <div className="w-[50px] h-[50px] bg-blue-100 rounded-full flex items-center justify-center">
+                    <Icon icon="mdi:briefcase" className="text-blue-600" width="24" height="24" />
+                  </div>
                   <div className="flex flex-col">
-                    <p className="font-semibold">
-                      {selectedProject.handyman.name}
-                    </p>
-                    <p className="font-normal text-[12px]">Mechanic</p>
+                    <p className="font-semibold">{selectedProject.serviceId?.title}</p>
+                    <p className="font-normal text-[12px]">Service</p>
                   </div>
                 </div>
                 <div className="flex justify-evenly items-center gap-3 bg-[#C4D9FF]/55 px-3 py-1 rounded">
-                  {selectedProject.handyman.specialization.map(
-                    (spec, index) => (
-                      <p key={index} className="text-sm text-black">
-                        {spec}
-                      </p>
-                    )
-                  )}
+                  <p className="text-sm text-black">${selectedProject.serviceId?.price}</p>
                 </div>
               </div>
               <hr className="w-[401px] mx-auto bg-[#000000]/50" />
 
               {/* Project Details */}
-              <div className="grid grid-cols-3 gap-4 mb-6 px-5 py-6">
+              <div className="grid grid-cols-2 gap-4 mb-6 px-5 py-6">
                 <div>
-                  <p className="text-sm text-gray-500">Date</p>
-                  <p className="text-[14px]">{selectedProject.date}</p>
+                  <p className="text-sm text-gray-500">Service Title</p>
+                  <p className="text-[14px]">{selectedProject.serviceId?.title}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Payment Plan</p>
-                  <p className="text-[14px]">Milestone</p>
+                  <p className="text-sm text-gray-500">Price</p>
+                  <p className="text-[14px] font-semibold">${selectedProject.serviceId?.price}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Service Fee</p>
-                  <p className="text-[14px]">{selectedProject.amount}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Time</p>
-                  <p className="text-[14px]">{selectedProject.time}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Payment Method</p>
-                  <p className="text-[14px]">Card</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Status</p>
-                  <p
-                    className={`font-medium ${
-                      selectedProject.status === "Completed"
-                        ? "text-green-600"
-                        : "text-yellow-600"
-                    }`}
-                  >
-                    {selectedProject.status}
+                  <p className="text-sm text-gray-500">Client Name</p>
+                  <p className="text-[14px]">
+                    {selectedProject.userId?.firstName} {selectedProject.userId?.lastName}
                   </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Client Role</p>
+                  <p className="text-[14px]">{selectedProject.userId?.role}</p>
                 </div>
               </div>
               <hr className="w-[401px] mx-auto bg-[#000000]/50" />
 
-              {/* Services Section */}
+              {/* Service Description Section */}
               <div className="px-5 py-6 bg-[#F5F5F5]">
                 <p className="text-sm font-semibold mb-2 text-[#121212]">
-                  Services
+                  Service Description
                 </p>
-                <ul className="space-y-2">
-                  {selectedProject.handyman.services.map((service, index) => (
-                    <li
-                      key={index}
-                      className="flex items-center px-2 border-l-2 border-[#023AA2]"
-                    >
-                      <span>{service}</span>
-                    </li>
-                  ))}
-                </ul>
+                <p className="text-sm text-gray-700 leading-relaxed">
+                  {selectedProject.serviceId?.description || 'No description available'}
+                </p>
               </div>
             </div>
           </div>

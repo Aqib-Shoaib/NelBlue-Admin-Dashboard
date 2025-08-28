@@ -3,6 +3,31 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as authService from '../services/authService';
 import { normalize } from './helpers';
 
+// Custom hook for token management
+export function useTokenManager() {
+  const checkTokens = () => {
+    const accessToken = localStorage.getItem('accessToken');
+    const refreshToken = localStorage.getItem('refreshToken');
+    return { accessToken, refreshToken };
+  };
+
+  const clearTokens = () => {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+  };
+
+  const setTokens = (tokens) => {
+    if (tokens.accessToken) {
+      localStorage.setItem('accessToken', tokens.accessToken);
+    }
+    if (tokens.refreshToken) {
+      localStorage.setItem('refreshToken', tokens.refreshToken);
+    }
+  };
+
+  return { checkTokens, clearTokens, setTokens };
+}
+
 export function useProfile() {
   return useQuery({
     queryKey: ['profile'],
@@ -11,9 +36,17 @@ export function useProfile() {
       if (!token) return null;
       return normalize(await authService.getProfile());
     },
+    retry: (failureCount, error) => {
+      // Don't retry on authentication errors
+      if (error?.status === 401 || error?.status === 403) {
+        return false;
+      }
+      // Retry up to 2 times for other errors
+      return failureCount < 2;
+    },
+    retryDelay: 1000,
   });
 }
-
 
 export function useLogin() {
   const queryClient = useQueryClient();
@@ -34,6 +67,24 @@ export function useLogin() {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
     },
   });
+}
+
+export function useLogout() {
+  const queryClient = useQueryClient();
+  
+  const logout = () => {
+    // Clear all tokens
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    
+    // Clear all queries from cache
+    queryClient.clear();
+    
+    // Redirect to login
+    window.location.href = '/login';
+  };
+  
+  return { logout };
 }
 
 export function useSignupInitiate() {
@@ -93,22 +144,62 @@ export function useGetProfile() {
 
 // Set up periodic token refresh to prevent tokens from expiring
 if (typeof window !== 'undefined') {
-  const TOKEN_REFRESH_INTERVAL = 10 * 60 * 1000; // 10 minutes
+  const TOKEN_REFRESH_INTERVAL = 14 * 60 * 1000; // 14 minutes (refresh before 15 min expiry)
+  let refreshIntervalId = null;
 
   const refreshTokenPeriodically = async () => {
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      try {
-        const response = await authService.refreshToken();
-        if (response?.data?.accessToken) {
-          localStorage.setItem('accessToken', response.data.accessToken);
-          console.log('Token refreshed successfully.');
-        } else {
-          console.error('Failed to refresh token.');
+    const accessToken = localStorage.getItem('accessToken');
+    const refreshToken = localStorage.getItem('refreshToken');
+    
+    if (!accessToken || !refreshToken) {
+      console.log('No tokens available for refresh');
+      return;
+    }
+
+    try {
+      console.log('Attempting periodic token refresh...');
+      const response = await authService.refreshToken({ refreshToken });
+      
+      if (response?.success && response?.data?.accessToken) {
+        localStorage.setItem('accessToken', response.data.accessToken);
+        if (response.data.refreshToken) {
+          localStorage.setItem('refreshToken', response.data.refreshToken);
         }
-      } catch (error) {
-        console.error('Error refreshing token:', error);
+        console.log('Periodic token refresh successful');
+      } else {
+        console.error('Periodic token refresh failed: Invalid response');
+        clearTokens();
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
       }
+    } catch (error) {
+      console.error('Error during periodic token refresh:', error);
+      // Don't clear tokens on network errors, only on auth errors
+      if (error?.response?.status === 401 || error?.response?.status === 403) {
+        clearTokens();
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
+      }
+    }
+  };
+
+  // Start periodic refresh
+  const startTokenRefresh = () => {
+    if (refreshIntervalId) {
+      clearInterval(refreshIntervalId);
+    }
+    refreshIntervalId = setInterval(refreshTokenPeriodically, TOKEN_REFRESH_INTERVAL);
+    console.log('Token refresh interval started');
+  };
+
+  // Stop periodic refresh
+  const stopTokenRefresh = () => {
+    if (refreshIntervalId) {
+      clearInterval(refreshIntervalId);
+      refreshIntervalId = null;
+      console.log('Token refresh interval stopped');
     }
   };
 
@@ -132,6 +223,24 @@ if (typeof window !== 'undefined') {
     document.addEventListener(event, handleUserActivity, true);
   });
   
-  // Set up periodic token refresh every 10 minutes
-  setInterval(refreshTokenPeriodically, TOKEN_REFRESH_INTERVAL);
+  // Start token refresh when tokens are available
+  const checkAndStartRefresh = () => {
+    const accessToken = localStorage.getItem('accessToken');
+    const refreshToken = localStorage.getItem('refreshToken');
+    
+    if (accessToken && refreshToken) {
+      startTokenRefresh();
+    } else {
+      stopTokenRefresh();
+    }
+  };
+
+  // Check on page load
+  checkAndStartRefresh();
+  
+  // Listen for storage changes (when tokens are added/removed)
+  window.addEventListener('storage', checkAndStartRefresh);
+  
+  // Cleanup on page unload
+  window.addEventListener('beforeunload', stopTokenRefresh);
 }

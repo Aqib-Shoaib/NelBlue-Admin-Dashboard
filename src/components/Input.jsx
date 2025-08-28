@@ -5,6 +5,7 @@ const Input = ({
     placeholder = '',
     value = '',
     onChange,
+    onBlur,
     name,
     type = 'text',
     error = '',
@@ -39,7 +40,8 @@ const Input = ({
                     placeholder={placeholder}
                     value={value}
                     onChange={onChange}
-                    className={`w-full h-14 border border-[#121212] rounded-md font-light text-base leading-6 text-[#12121280] p-4 outline-none focus:border-[#347CC6] focus:ring-2 focus:ring-[#347CC6] ${inputStyle} ${isPasswordInput ? 'pr-12' : ''}`}
+                    onBlur={onBlur}
+                    className={`w-full h-14 border border-[#121212] rounded-md font-light text-base leading-6 text-[#12121280] p-4 outline-none focus:border-[#347CC6] focus:ring-2 focus:ring-[#347CC6] ${inputStyle} ${isPasswordInput ? 'pr-12' : ''} ${error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
                     {...inputProps}
                 />
                 {isPasswordInput && (

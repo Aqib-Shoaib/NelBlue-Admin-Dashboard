@@ -50,8 +50,6 @@ const UserDetails = ({ user, onUpdate, onClose }) => {
     }
   };
 
-  console.log(user);
-
   return (
     <div className="w-full h-full p-8 px-20">
       {/* Main Container - matching Figma dimensions exactly */}

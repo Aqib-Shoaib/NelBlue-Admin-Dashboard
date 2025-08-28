@@ -10,9 +10,6 @@ function VerificationModal({ isOpen, onClose, title, image, userId, onSuccess })
   const [messageModal, setMessageModal] = useState({ isOpen: false, type: '', title: '', message: '' });
 
   const handleAction = async (actionType) => {
-    console.log('VerificationModal - User ID:', userId);
-    console.log('VerificationModal - Action Type:', actionType);
-    
     if (!userId) {
       setMessageModal({
         isOpen: true,

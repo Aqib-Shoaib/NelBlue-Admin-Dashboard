@@ -14,6 +14,7 @@ function Signup() {
     terms: false,
   });
   const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
   const signupMutation = useSignupInitiate();
   const navigate = useNavigate();
 
@@ -23,25 +24,123 @@ function Signup() {
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
     }));
+    
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  }
+
+  function handleBlur(e) {
+    const { name } = e.target;
+    setTouched(prev => ({ ...prev, [name]: true }));
+    validateField(name, form[name]);
+  }
+
+  function validateField(name, value) {
+    let error = '';
+    
+    switch (name) {
+      case 'firstName':
+        if (!value.trim()) {
+          error = 'First name is required';
+        } else if (value.trim().length < 2) {
+          error = 'First name must be at least 2 characters';
+        } else if (!/^[a-zA-Z\s]+$/.test(value.trim())) {
+          error = 'First name can only contain letters and spaces';
+        }
+        break;
+      case 'lastName':
+        if (!value.trim()) {
+          error = 'Last name is required';
+        } else if (value.trim().length < 2) {
+          error = 'Last name must be at least 2 characters';
+        } else if (!/^[a-zA-Z\s]+$/.test(value.trim())) {
+          error = 'Last name can only contain letters and spaces';
+        }
+        break;
+      case 'email':
+        if (!value.trim()) {
+          error = 'Email is required';
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+          error = 'Please enter a valid email address';
+        }
+        break;
+      case 'country':
+        if (!value.trim()) {
+          error = 'Country is required';
+        }
+        break;
+      case 'password':
+        if (!value.trim()) {
+          error = 'Password is required';
+        } else if (value.length < 8) {
+          error = 'Password must be at least 8 characters';
+        } else if (!/(?=.*[a-z])/.test(value)) {
+          error = 'Password must contain at least one lowercase letter';
+        } else if (!/(?=.*[A-Z])/.test(value)) {
+          error = 'Password must contain at least one uppercase letter';
+        } else if (!/(?=.*\d)/.test(value)) {
+          error = 'Password must contain at least one number';
+        }
+        break;
+      default:
+        break;
+    }
+    
+    if (error) {
+      setErrors(prev => ({ ...prev, [name]: error }));
+    } else {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+    
+    return error;
+  }
+
+  function validateForm() {
+    const newErrors = {};
+    
+    // Validate all fields
+    Object.keys(form).forEach(key => {
+      if (key !== 'terms') {
+        const error = validateField(key, form[key]);
+        if (error) {
+          newErrors[key] = error;
+        }
+      }
+    });
+    
+    // Check terms acceptance
+    if (!form.terms) {
+      newErrors.terms = 'Please accept the terms and privacy policy';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
-    // Basic validation
-    const nextErrors = {};
-    if (!form.firstName) nextErrors.firstName = 'First name is required';
-    if (!form.lastName) nextErrors.lastName = 'Last name is required';
-    if (!form.email) nextErrors.email = 'Email is required';
-    if (!form.password) nextErrors.password = 'Password is required';
-    if (!form.country) nextErrors.country = 'Country is required';
-    if (!form.terms) nextErrors.terms = 'Please accept terms';
-    setErrors(nextErrors);
-    if (Object.keys(nextErrors).length) return;
+    
+    // Mark fields as touched so errors show immediately
+    setTouched(prev => ({ 
+      ...prev, 
+      firstName: true, 
+      lastName: true, 
+      email: true, 
+      country: true, 
+      password: true,
+      terms: true 
+    }));
+    
+    if (!validateForm()) {
+      return;
+    }
 
     const payload = {
-      firstName: form.firstName,
-      lastName: form.lastName,
-      email: form.email,
+      firstName: form.firstName.trim(),
+      lastName: form.lastName.trim(),
+      email: form.email.trim(),
       country: form.country,
       password: form.password,
     };
@@ -56,13 +155,23 @@ function Signup() {
     }
   }
 
+  // Disable submit if required fields are empty or there are known errors
+  const isFormFilled = 
+    form.firstName.trim() &&
+    form.lastName.trim() &&
+    form.email.trim() &&
+    form.country.trim() &&
+    form.password.trim() &&
+    form.terms;
+  const hasErrors = Object.values(errors).some(Boolean);
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="relative w-full max-w-[820px] h-full py-4 bg-[#F4F4F4] rounded-2xl flex flex-col items-center shadow-md">
         <div className="absolute left-6 sm:left-8 top-8 sm:top-12">
           <span className="font-inter font-bold text-[24px] leading-[29px] text-[#023AA2]">NELAUTOS</span>
         </div>
-        <form onSubmit={handleSubmit} className="w-full max-w-[600px] mx-auto flex flex-col gap-6 pt-[110px] sm:pt-[125px] px-4 sm:px-6">
+        <form onSubmit={handleSubmit} className="w-full max-w-[600px] mx-auto flex flex-col gap-6 pt-[110px] sm:pt-[125px] px-4 sm:px-6" noValidate>
           <h2 className="font-poppins font-medium text-2xl sm:text-[28px] leading-[28px] text-[#121212] text-center mb-2">Sign up as Admin</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
@@ -71,7 +180,8 @@ function Signup() {
               placeholder="Enter firstname"
               value={form.firstName}
               onChange={handleChange}
-              error={errors.firstName}
+              onBlur={handleBlur}
+              error={touched.firstName && errors.firstName}
             />
             <Input
               label="Last Name"
@@ -79,7 +189,8 @@ function Signup() {
               placeholder="Enter lastname"
               value={form.lastName}
               onChange={handleChange}
-              error={errors.lastName}
+              onBlur={handleBlur}
+              error={touched.lastName && errors.lastName}
             />
           </div>
           <Input
@@ -88,7 +199,8 @@ function Signup() {
             placeholder="Enter email"
             value={form.email}
             onChange={handleChange}
-            error={errors.email}
+            onBlur={handleBlur}
+            error={touched.email && errors.email}
           />
           <div className="relative">
             <Input
@@ -97,7 +209,8 @@ function Signup() {
               placeholder="Select country"
               value={form.country}
               onChange={handleChange}
-              error={errors.country}
+              onBlur={handleBlur}
+              error={touched.country && errors.country}
               inputProps={{ list: 'country-list' }}
             />
             <datalist id="country-list">
@@ -107,7 +220,6 @@ function Signup() {
               <option value="South Africa" />
               <option value="Other" />
             </datalist>
-            {/* Optionally add a dropdown icon here */}
           </div>
           <Input
             label="Password"
@@ -116,26 +228,33 @@ function Signup() {
             placeholder="Enter password"
             value={form.password}
             onChange={handleChange}
-            error={errors.password}
+            onBlur={handleBlur}
+            error={touched.password && errors.password}
             inputStyle="h-14"
           />
-          <div className="flex items-center gap-2 mt-2">
+          <div className="flex items-start gap-2 mt-2">
             <input
               type="checkbox"
               name="terms"
               checked={form.terms}
               onChange={handleChange}
-              className="w-[15px] h-[16px] border border-[#121212] rounded mr-2 cursor-pointer"
+              className="w-[15px] h-[16px] border border-[#121212] rounded mr-2 cursor-pointer mt-1"
               id="terms"
             />
             <label htmlFor="terms" className="font-poppins font-normal text-[13px] leading-5 text-black/50 cursor-pointer">
               Accept the <span className="underline">Terms</span> and <span className="underline">Privacy Policy</span>
             </label>
           </div>
+          {errors.terms && (
+            <p className="text-red-600 text-sm -mt-4">{errors.terms}</p>
+          )}
           {signupMutation.isError && (
             <p className="text-red-600 text-sm">{signupMutation.error?.message}</p>
           )}
-          <Button type="submit" disabled={signupMutation.isPending}>
+          <Button 
+            type="submit" 
+            disabled={signupMutation.isPending || !isFormFilled || hasErrors}
+          >
             {signupMutation.isPending ? 'Creating account...' : 'Sign Up'}
           </Button>
           <div className="flex justify-center items-center gap-1 mt-4">

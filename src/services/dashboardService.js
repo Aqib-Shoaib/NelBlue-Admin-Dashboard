@@ -12,3 +12,23 @@ export const getAdminDashboard = async () => {
     return { success: false, message };
   }
 };
+
+export const getAnalytics = async () => {
+  try {
+    const res = await API.get('/admin/dashboard/analytics');
+    return { success: true, data: res.data };
+  } catch (error) {
+    const message = extractErrorMessage(error);
+    return { success: false, message };
+  }
+};
+
+export const getAllProjects = async () => {
+  try {
+    const res = await API.get('/admin/getallProjects');
+    return { success: true, data: res.data };
+  } catch (error) {
+    const message = extractErrorMessage(error);
+    return { success: false, message };
+  }
+};

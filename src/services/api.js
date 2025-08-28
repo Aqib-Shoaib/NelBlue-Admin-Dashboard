@@ -38,10 +38,43 @@ function clearTokens() {
   }
 }
 
-// Add request interceptor to automatically add token
+// Check if token is expired (JWT tokens)
+function isTokenExpired(token) {
+  if (!token) return true;
+  
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const currentTime = Date.now() / 1000;
+    // Consider token expired if it expires within the next 5 minutes
+    return payload.exp < (currentTime + 300);
+  } catch (error) {
+    console.log('Error parsing token:', error);
+    return true;
+  }
+}
+
+// Check if we need to refresh the token
+function shouldRefreshToken() {
+  const accessToken = getToken('access');
+  const refreshToken = getToken('refresh');
+  
+  if (!accessToken || !refreshToken) return false;
+  
+  return isTokenExpired(accessToken);
+}
+
+// Add request interceptor to automatically add token and check expiration
 API.interceptors.request.use(
   (config) => {
     const token = getToken();
+    
+    // Check if token is expired before making request
+    if (token && isTokenExpired(token)) {
+      console.log('Token expired, attempting refresh before request...');
+      // This will trigger the response interceptor to handle the 401
+      // For now, we'll let the request go through and handle it in response
+    }
+    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -70,7 +103,17 @@ API.interceptors.response.use(
         }
 
         console.log('Attempting token refresh...');
-        const response = await API.post('/auth/refresh', { refreshToken });
+        
+        // Create a new axios instance for refresh to avoid circular dependency
+        const refreshAxios = axios.create({
+          baseURL: BASE_URL,
+          withCredentials: true,
+        });
+        
+        const response = await refreshAxios.post('/auth/refreshtoken', { 
+          refreshToken: refreshToken 
+        });
+        
         const { accessToken, refreshToken: newRefreshToken } = response.data;
 
         if (accessToken) {
@@ -101,5 +144,7 @@ API.interceptors.response.use(
 API.getToken = getToken;
 API.setTokens = setTokens;
 API.clearTokens = clearTokens;
+API.isTokenExpired = isTokenExpired;
+API.shouldRefreshToken = shouldRefreshToken;
 
 export default API;

@@ -48,7 +48,7 @@ export const signupVerify = async (data) => {
 
 export const resendOtp = async (data) => {
   try {
-    const res = await API.put('/admin/signup/resend-otp', data);
+    const res = await API.post('/admin/signup/resend-otp', data);
     return { success: true, data: res.data };
   } catch (error) {
     const message = extractErrorMessage(error);
