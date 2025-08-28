@@ -30,17 +30,37 @@ function Users() {
     },
     {
       title: "New Professionals",
-      value: professional.filter((m) => m.isVerified).length,
+      value: professional.filter((m) => m.identityVerified).length,
     },
     {
       title: "Approved Professionals",
-      value: professional.filter((m) => m.isVerified).length,
+      value: professional.filter((m) => m.identityVerified).length,
     },
     {
       title: "Pending Professionals",
-      value: professional.filter((m) => !m.isVerified).length,
+      value: professional.filter((m) => !m.identityVerified).length,
     },
   ];
+  const clientStats = [
+    {
+      title: "Total Clients",
+      value: clients.length,
+    },
+    {
+      title: "New Clients",
+      value: clients.filter((m) => m.identityVerified).length,
+    },
+    {
+      title: "Approved Clients",
+      value: clients.filter((m) => m.identityVerified).length,
+    },
+    {
+      title: "Pending Clients",
+      value: clients.filter((m) => !m.identityVerified).length,
+    },
+  ];
+
+  console.log(usersData)
 
   return (
     <div className="w-full h-full p-10 space-y-8">
@@ -88,21 +108,6 @@ function Users() {
                 Client
               </button>
             </div>
-
-            {/* Search input */}
-            {active === "client" && <div className="w-full md:w-[300px] flex items-center border rounded-full border-[#121212]/40 px-3 py-2">
-              <input
-                type="text"
-                placeholder="Search Client"
-                className="w-full outline-none text-sm font-medium"
-              />
-              <Icon
-                icon="mdi:magnify"
-                width="20"
-                height="20"
-                className="text-[#121212BF]"
-              />
-            </div>}
           </div>
 
           {active === "professional" && (
@@ -116,95 +121,81 @@ function Users() {
                 </div>
               ))}
             </div>)}
+          {active === "client" && (
+            <div className="flex items-center gap-2">
+              {clientStats.map((stat, idx) => (
+                <div className="flex-1 h-[108px] bg-[#EDEDED] rounded-lg" key={idx} >
+                  <div className="flex flex-col items-start justify-center gap-2 p-4">
+                    <p className="text-[16px] font-semibold">{stat.title}</p>
+                    <p className="text-[16px] font-semibold">{stat.value}</p>
+                  </div>
+                </div>
+              ))}
+            </div>)}
 
-          {/* Table */}
-          <div className="overflow-x-auto rounded-md border h-full">
-            <table className="w-full text-left rounded-md spacing-y-4">
-              <thead className="bg-[#F5F5F5] h-[64px] text-sm font-semibold mb-2">
-                <tr>
-                  {active === "professional" ? (
-                    <>
-                      <th className="text-center">S/N</th>
-                      <th className="text-center">Name</th>
-                      <th className="text-center">Email</th>
-                      <th className="text-center">Location</th>
-                      <th className="text-center">Verification</th>
-                      <th className="text-center">Payment</th>
-                    </>
-                  ) : (
-                    <>
-                      <th className="text-center">S/N</th>
-                      <th className="text-center">Name</th>
-                      <th className="text-center">Email</th>
-                      <th className="text-center">Location</th>
-                      <th className="text-center">Verification</th>
-                      <th className="text-center">Rate</th>
-                    </>
-                  )}
-                </tr>
-              </thead>
+          {/* Table - div based to match UserDetails drawer styles */}
+          <div className="max-w-full my-2 border border-[#12121280] rounded-md overflow-hidden">
+            {/* Header */}
+            <div className="bg-[#F0F0F0] px-2 py-2">
+              {active === "professional" ? (
+                <div className="flex justify-between px-2 py-2 bg-[#F5F5F5] font-bold text-[#121212] text-sm">
+                  <div className="flex-1 text-center px-2">S/N</div>
+                  <div className="flex-1 text-center px-2">Name</div>
+                  <div className="flex-1 text-center px-2">Email</div>
+                  <div className="flex-1 text-center px-2">Location</div>
+                  <div className="flex-1 text-center px-2">Verification</div>
+                  <div className="flex-1 text-center px-2">Payment</div>
+                </div>
+              ) : (
+                <div className="flex justify-between px-2 py-2 bg-[#F5F5F5] font-bold text-[#121212] text-sm">
+                  <div className="flex-1 text-center px-2">S/N</div>
+                  <div className="flex-1 text-center px-2">Name</div>
+                  <div className="flex-1 text-center px-2">Email</div>
+                  <div className="flex-1 text-center px-2">Location</div>
+                  <div className="flex-1 text-center px-2">Verification</div>
+                  <div className="flex-1 text-center px-2">Rate</div>
+                </div>
+              )}
+            </div>
 
-              <tbody className="space-x-2 space-y-4">
-                {active === "professional"
-                  ? professional.map((item, idx) => (
-                    <tr
-                      key={idx}
-                      className="bg-[#E1E1E1]/70 hover:bg-[#E1E1E1] text-sm text-center rounded-md cursor-pointer h-fit"
-                      onClick={() => openDetails(item)}
-                    >
-                      <td className="px-4 py-2 text-center">
-                        {item?.number ?? idx + 1}
-                      </td>
-                      <td className="px-4 py-2 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <p className="text-base">{`${item.firstName} ${item.lastName}`}</p>
-                        </div>
-                      </td>
-                      <td className="px-4 py-2 text-center">
-                        {item?.email}
-                      </td>
-                      <td className="px-4 py-2 text-center">
-                        {item?.address ?? 'Not Specified'}
-                      </td>
-                      <td className={`px-4 py-2 font-medium text-center ${item.identityVerified
-                        ? 'text-[#319F43]' : 'text-[#FF0000]'}`}>
-                        {item.identityVerified ? 'Approved' : 'Pending'}
-                      </td>
-                      <td className="px-4 py-2 text-center">
-                        {item?.payment ?? 'Not Specified'}
-                      </td>
-                    </tr>
-                  ))
-                  : clients.map((item, idx) => (
-                    <tr
-                      key={idx}
-                      className="bg-[#E1E1E1]/70 hover:bg-[#E1E1E1] text-sm text-center rounded-md cursor-pointer h-fit"
-                      onClick={() => openDetails(item)}
-                    >
-                      <td className="px-4 py-2 text-center">
-                        {item?.number ?? idx + 1}
-                      </td>
-                      <td className="px-4 py-2 text-center">
-                        <div className="text-left">
-                          <p className="text-base">{`${item.firstName} ${item.lastName}`}</p>
-                        </div>
-                      </td>
-                      <td className="px-4 py-2 text-center">
-                        <p className="text-base">{item.email}</p>
-                      </td>
-                      <td className="px-4 py-2 text-center">
-                        {item?.address ?? 'Not Specified'}
-                      </td>
-                      <td className={`px-4 py-2 font-medium ${item.isVerified ? 'text-[#319F43]' : 'text-[#FF0000]'}`}>
-                        {item.isVerified ? 'Approved' : 'Pending'}
-                      </td>
-                      <td className="px-4 py-2 text-center">
-                        {item?.payment ?? 'Not Specified'}
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
+            {/* Rows */}
+            {active === "professional"
+              ? professional.map((item, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center px-2 py-2 bg-[rgba(224,224,224,0.25)] rounded-[10px] m-2 text-sm cursor-pointer"
+                  onClick={() => openDetails(item)}
+                >
+                  <div className="flex-1 px-2 text-center">{item?.number ?? idx + 1}</div>
+                  <div className="flex-1 px-2 text-center">
+                    <p className="text-base">{`${item.firstName} ${item.lastName}`}</p>
+                  </div>
+                  <div className="flex-1 px-2 text-center">{item?.email}</div>
+                  <div className="flex-1 px-2 text-center">{item?.address ?? 'Not Specified'}</div>
+                  <div className={`flex-1 px-2 text-center font-medium ${item.identityVerified ? 'text-[#319F43]' : 'text-[#FF0000]'}`}>
+                    {item.identityVerified ? 'Approved' : 'Pending'}
+                  </div>
+                  <div className="flex-1 px-2 text-center">{item?.payment ?? 'Not Specified'}</div>
+                </div>
+              ))
+              : clients.map((item, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center px-2 py-2 bg-[rgba(224,224,224,0.25)] rounded-[10px] m-2 text-sm cursor-pointer"
+                  onClick={() => openDetails(item)}
+                >
+                  <div className="flex-1 px-2 text-center">{item?.number ?? idx + 1}</div>
+                  <div className="flex-1 px-2 text-center">
+                    <p className="text-base">{`${item.firstName} ${item.lastName}`}</p>
+                  </div>
+                  <div className="flex-1 px-2 text-center">{item?.email}</div>
+                  <div className="flex-1 px-2 text-center">{item?.address ?? 'Not Specified'}</div>
+                  <div className={`flex-1 px-2 text-center font-medium ${item.identityVerified ? 'text-[#319F43]' : 'text-[#FF0000]'}`}>
+                    {item.identityVerified ? 'Approved' : 'Pending'}
+                  </div>
+                  <div className="flex-1 px-2 text-center">{item?.payment ?? 'Not Specified'}</div>
+                </div>
+              ))}
           </div>
         </>
       )}

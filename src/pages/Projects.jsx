@@ -7,12 +7,14 @@ import image from "../assets/4c1a900b3b3e49a09cbd22efaee47a0cec00b79a.jpg";
 import Topbar from "../components/Topbar";
 import { useAllProjects } from "../store/useDashboard";
 import Spinner from "../components/Spinner";
+import BookingDetailsDrawer from "../components/BookingDetailsDrawer";
 
 function Projects() {
   const [selectedProject, setSelectedProject] = useState(null);
   const [dropdownIndex, setDropdownIndex] = useState(null);
   const [showClientDetails, setShowClientDetails] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showBookingDrawer, setShowBookingDrawer] = useState(false);
   const dropdownRef = useRef();
 
   // Fetch projects data from API
@@ -43,6 +45,11 @@ function Projects() {
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Show booking details drawer on mount (hardcoded demo data inside component)
+  useEffect(() => {
+    setShowBookingDrawer(true);
   }, []);
 
   const toggleDropdown = (idx) => {
@@ -131,96 +138,108 @@ function Projects() {
             </div>
           </div>
 
-          {/* Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-separate border-spacing-y-3">
-              <thead className="bg-[#F5F5F5] h-[64px] text-sm font-semibold">
-                <tr>
-                  <th className="text-center">Client</th>
-                  <th className="text-center">Service</th>
-                  <th className="text-center">Price</th>
-                  <th className="text-center">Client Role</th>
-                  <th className="text-center">Action</th>
-                </tr>
-              </thead>
+          {/* Table - div based to match UserDetails drawer styles */}
+          <div className="max-w-full my-2 border border-[#12121280] rounded-md overflow-hidden">
+            {/* Header */}
+            <div className="bg-[#F0F0F0] px-2 py-2">
+              <div className="flex justify-between px-2 py-2 bg-[#F5F5F5] font-bold text-[#121212] text-sm">
+                <div className="flex-1 text-center px-2">Client</div>
+                <div className="flex-1 text-center px-2">Service</div>
+                <div className="flex-1 text-center px-2">Price</div>
+                <div className="flex-1 text-center px-2">Client Role</div>
+                <div className="flex-1 text-center px-2">Action</div>
+              </div>
+            </div>
 
-              <tbody>
-                {filteredProjects.length > 0 ? (
-                  filteredProjects.map((project, idx) => (
-                    <tr key={project._id} className="bg-[#E1E1E1]/70 hover:bg-[#E1E1E1] text-sm text-center rounded-md">
-                      <td className="px-4 py-2">
-                        <div
-                          className="flex items-center justify-center gap-2 cursor-pointer"
-                          onClick={() => openClientDetails(project)}
-                        >
-                          <img
-                            src={project.userId?.profileImage || image}
-                            alt={`${project.userId?.firstName} ${project.userId?.lastName}`}
-                            className="w-8 h-8 rounded-full border"
-                            onError={(e) => {
-                              e.target.src = image;
-                            }}
-                          />
-                          <div className="flex flex-col text-left">
-                            <p className="text-[16px]">
-                              {project.userId?.firstName} {project.userId?.lastName}
-                            </p>
-                            <p className="text-xs text-gray-500">{project.userId?.email}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-2">
-                        <p className="border-l border-[#023AA2] pl-2">{project.serviceId?.title}</p>
-                      </td>
-                      <td className="px-4 py-2">${project.serviceId?.price || 0}</td>
-                      <td className="px-4 py-2">
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          project.userId?.role === 'Client' 
-                            ? 'bg-blue-100 text-blue-800' 
-                            : 'bg-green-100 text-green-800'
-                        }`}>
-                          {project.userId?.role || 'N/A'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-2 relative">
-                        <Icon
-                          icon={dotsVertical}
-                          width="24"
-                          height="24"
-                          className="cursor-pointer"
+            {/* Rows */}
+            {filteredProjects.length > 0 ? (
+              filteredProjects.map((project, idx) => (
+                <div
+                  key={project._id}
+                  className="flex items-center px-2 py-2 bg-[rgba(224,224,224,0.25)] rounded-[10px] m-2 text-sm"
+                >
+                  {/* Client */}
+                  <div className="flex-1 px-2">
+                    <div
+                      className="flex items-center justify-center gap-2 cursor-pointer"
+                      onClick={() => openClientDetails(project)}
+                    >
+                      <img
+                        src={project.userId?.profileImage || image}
+                        alt={`${project.userId?.firstName} ${project.userId?.lastName}`}
+                        className="w-8 h-8 rounded-full border"
+                        onError={(e) => {
+                          e.target.src = image;
+                        }}
+                      />
+                      <div className="flex flex-col text-left">
+                        <p className="text-[16px]">
+                          {project.userId?.firstName} {project.userId?.lastName}
+                        </p>
+                        <p className="text-xs text-gray-500">{project.userId?.email}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Service */}
+                  <div className="flex-1 px-2 text-center">
+                    <p className="inline-block border-l border-[#023AA2] pl-2">{project.serviceId?.title}</p>
+                  </div>
+
+                  {/* Price */}
+                  <div className="flex-1 px-2 text-center">
+                    ${project.serviceId?.price || 0}
+                  </div>
+
+                  {/* Client Role */}
+                  <div className="flex-1 px-2 text-center">
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs ${
+                        project.userId?.role === 'Client'
+                          ? 'bg-blue-100 text-blue-800'
+                          : 'bg-green-100 text-green-800'
+                      }`}
+                    >
+                      {project.userId?.role || 'N/A'}
+                    </span>
+                  </div>
+
+                  {/* Action */}
+                  <div className="flex-1 px-2 text-center relative">
+                    <Icon
+                      icon={dotsVertical}
+                      width="24"
+                      height="24"
+                      className="cursor-pointer inline-block"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleDropdown(idx);
+                      }}
+                    />
+                    {dropdownIndex === idx && (
+                      <div
+                        ref={dropdownRef}
+                        className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10"
+                      >
+                        <button
+                          className="block w-full text-left px-4 py-2 hover:bg-gray-100"
                           onClick={(e) => {
                             e.stopPropagation();
-                            toggleDropdown(idx);
+                            openProjectDetails(project);
                           }}
-                        />
-                        {dropdownIndex === idx && (
-                          <div
-                            ref={dropdownRef}
-                            className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10"
-                          >
-                            <button
-                              className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                openProjectDetails(project);
-                              }}
-                            >
-                              View Project Details
-                            </button>
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="5" className="text-center py-8 text-gray-500">
-                      {searchTerm ? 'No projects found matching your search' : 'No projects available'}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                        >
+                          View Project Details
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="px-4 py-8 text-center text-gray-500">
+                {searchTerm ? 'No projects found matching your search' : 'No projects available'}
+              </div>
+            )}
           </div>
         </>
       )}
@@ -384,6 +403,12 @@ function Projects() {
           </div>
         </div>
       )}
+
+      {/* Booking Details Drawer (hardcoded content, opens on mount) */}
+      <BookingDetailsDrawer
+        isOpen={showBookingDrawer}
+        onClose={() => setShowBookingDrawer(false)}
+      />
     </div>
   );
 }

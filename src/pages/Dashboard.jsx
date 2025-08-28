@@ -227,7 +227,7 @@ function Dashboard() {
 
           {/* Table Body */}
           <tbody>
-            <tr className="bg-[#E1E1E1]/70 hover:bg-[#E1E1E1] text-sm text-center rounded-md">
+            <tr className="text-sm text-center bg-[#E1E1E1]/25 rounded-md">
               <td className="px-4 py-2">
                 <div className="flex items-center justify-center gap-2">
                   <img
